@@ -1,6 +1,11 @@
-local timeLeftStr
+local timeLeftStr, images
 
 local function load()
+  images = {
+    heart = love.graphics.newImage('img/chrome/heart.png'),
+    heartShadow = love.graphics.newImage('img/chrome/heart-shadow.png')
+  }
+	stg.loadImages(images)
   timeLeftStr = '2:00'
 end
 
@@ -48,7 +53,14 @@ local function drawTime()
 end
 
 local function drawLives()
-  drawLabel({input = ':2', y = stg.height - 8 - 4,  align = {type = 'right', width = stg.width - 4}})
+  love.graphics.setColor(stg.colors.black)
+  love.graphics.draw(images.heart, stg.width - 8 * 3 - 4 + 1, stg.height - 4 - 8 + 1)
+  love.graphics.setColor(stg.colors.yellow)
+  love.graphics.draw(images.heart, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
+  love.graphics.setColor(stg.colors.redLight)
+  love.graphics.draw(images.heartShadow, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
+  love.graphics.setColor(stg.colors.white)
+  drawLabel({input = 'x2', y = stg.height - 8 - 4,  align = {type = 'right', width = stg.width - 4}})
 end
 
 local function drawBonusOverlay()
