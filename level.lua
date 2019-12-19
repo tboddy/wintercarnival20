@@ -1,3 +1,5 @@
+local killBulletLimit = 60
+
 local function waveOne()
   local function circle(enemy)
     local angle = math.tau * math.random()
@@ -286,16 +288,18 @@ local function bossOne()
         currentSpell = spellTwo
         if not enemy.flags.hitSpellTwo then
           enemy.flags.hitSpellTwo = true
-          enemy.clock = -1
+          stage.killBullets = true
+          enemy.clock = -killBulletLimit
         end
       elseif enemy.health < enemy.maxHealth / 3 then
         currentSpell = spellThree
         if not enemy.flags.hitSpellThree then
           enemy.flags.hitSpellThree = true
-          enemy.clock = -1
+          stage.killBullets = true
+          enemy.clock = -killBulletLimit
         end
       end
-      currentSpell(enemy)
+      if enemy.clock >= 0 then currentSpell(enemy) end
     else enemy.clock = -1 end
     enemy.rotation = math.sin(enemy.flags.rotateCount) / 60
     enemy.flags.rotateCount = enemy.flags.rotateCount + .01
@@ -356,7 +360,7 @@ local function bossTwo()
           bullet.x = enemy.x
           bullet.y = enemy.y
           bullet.angle = angle
-          bullet.speed = 2
+          bullet.speed = 2 + math.random() * .075
           if opposite then bullet.type = 'smallRed'; bullet.speed = bullet.speed + .5; bullet.top = true else bullet.type = 'big' end
         end)
       end
@@ -412,12 +416,8 @@ local function bossTwo()
       enemy.flags.spellThreeAngle2 = enemy.flags.spellThreeAngle2 - angleMod
     end
   end
-  local function spellFour(enemy)
-
-  end
-  local function spellFive(enemy)
-
-  end
+  local function spellFour(enemy) end
+  local function spellFive(enemy) end
   stage.spawnEnemy(function(enemy)
     enemy.x = stg.width / 2
     enemy.y = -134 / 2
@@ -425,29 +425,34 @@ local function bossTwo()
     enemy.speed = 3.25
     enemy.angle = math.pi / 2
     enemy.rotation = 0
-    enemy.health = 150
+    enemy.health = 50
     enemy.xScale = 1
     enemy.flags.rotateCount = 0
     enemy.flags.hitSpellTwo = false
     enemy.flags.hitSpellThree = false
+    enemy.suicideFunc = function(enemy)
+      stage.killBullets = true
+    end
   end, function(enemy)
     stg.slowEntity(enemy, 0, .05)
     if enemy.speed == 0 then
-      local currentSpell = spellFour
+      local currentSpell = spellOne
       if enemy.health < enemy.maxHealth / 3 * 2 and enemy.health >= enemy.maxHealth / 3 then
         currentSpell = spellTwo
         if not enemy.flags.hitSpellTwo then
           enemy.flags.hitSpellTwo = true
-          enemy.clock = -1
+          enemy.clock = -killBulletLimit
+          stage.killBullets = true
         end
       elseif enemy.health < enemy.maxHealth / 3 then
         currentSpell = spellThree
         if not enemy.flags.hitSpellThree then
           enemy.flags.hitSpellThree = true
-          enemy.clock = -1
+          enemy.clock = -killBulletLimit
+          stage.killBullets = true
         end
       end
-      currentSpell(enemy)
+      if enemy.clock >= 0 then currentSpell(enemy) end
     else enemy.clock = -1 end
     enemy.rotation = math.sin(enemy.flags.rotateCount) / 60
     enemy.flags.rotateCount = enemy.flags.rotateCount + .01

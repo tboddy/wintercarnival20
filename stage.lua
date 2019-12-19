@@ -19,7 +19,7 @@ end
 
 local function load()
   killBulletClock = 0
-  killBulletLimit = 60 * 1.5
+  killBulletLimit = 60
   bulletAnimateInterval = 8
   bulletAnimateMax = bulletAnimateInterval * 4
   blockSize = 32
@@ -48,6 +48,7 @@ local function spawnEnemy(initFunc, updateFunc)
   if math.random() < .5 then enemy.xScale = 1 else enemy.xScale = -1 end
   local mod = math.pi / 30
   enemy.rotation = -mod + mod * 2 * math.random()
+  enemy.suicideFunc = false
 	initFunc(enemy)
   enemy.maxHealth = enemy.health
   if enemy.type == 'fairygreen' or enemy.type == 'fairyred' or enemy.type == 'fairyblue' then enemy.width = 28; enemy.height = 24
@@ -61,6 +62,7 @@ local function updateEnemy(enemy)
   if enemy.health <= 0 then
     explosion.spawn({x = enemy.x, y = enemy.y, big = true, type = 'gray'})
     stg.score = stg.score + enemy.score
+    if enemy.suicideFunc then enemy.suicideFunc(enemy) end
     enemy.active = false
   end
   if enemy.seen and enemy.active then
@@ -110,7 +112,7 @@ local function updateBullet(bullet)
 	if string.find(bullet.type, 'bolt') or string.find(bullet.type, 'arrow') or string.find(bullet.type, 'pill') then bullet.rotation = bullet.angle end
 	bullet.clock = bullet.clock + 1
 	if bullet.x < -bullet.width or bullet.x > stg.width + bullet.width or bullet.y < -bullet.height or bullet.y > stg.height + bullet.height then bullet.active = false
-	elseif killBulletClock > 0 then
+	elseif stage.killBullets then
 		explosion.spawn({x = bullet.x, y = bullet.y})
 		bullet.active = false
 	end
@@ -188,6 +190,11 @@ local function update()
   for i = 1, #stage.enemies do if stage.enemies[i].active then updateEnemy(stage.enemies[i]) end end
   for i = 1, #bullets do if bullets[i].active then updateBullet(bullets[i]) end end
   for i = 1, #chips do if chips[i].active then updateChip(chips[i]) end end
+  if stage.killBullets then
+    killBulletClock = killBulletLimit
+    stage.killBullets = false
+  end
+  if killBulletClock > 0 then killBulletClock = killBulletClock - 1 end
 end
 
 local function drawEnemy(enemy)
@@ -245,5 +252,6 @@ return {
   enemyCount = 0,
   spawnEnemy = spawnEnemy,
   spawnBullet = spawnBullet,
-  spawnBlock = spawnBlock
+  spawnBlock = spawnBlock,
+  killBullets = false
 }
