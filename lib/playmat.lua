@@ -84,11 +84,11 @@ local function newCamera(sw,sh,x,y,r,z,f,o)
 		getY = getY,
 		getZoom = getZoom,
 		getFov = getFov,
-		getOffset = getOffset	
+		getOffset = getOffset
 	}
 	cam.rendercanvas = lg.newCanvas(cam.sw,cam.sh)
 --	cam.canvas = lg.newCanvas(cam.sw,cam.sh)
-	
+
 	setRotation(cam,cam.r)
 
 	return cam
@@ -120,7 +120,7 @@ vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 pixel_coords)
 		(uv.x / texture_coords.y + x) / mapw,
 		(uv.y / texture_coords.y + y) / maph
 	);
-	
+
 	if (wrap == 0 && (uv2.x < 0.0 || uv2.x > 1.0 || uv2.y < 0.0 || uv2.y > 1.0)) {
 		return vec4( 0.0,0.0,0.0,0.0 );
 	} else {
@@ -139,10 +139,10 @@ local function drawPlane(cam, image, ox,oy, sx,sy, wrap)
 	shader:send('fov', cam.f)
 	shader:send('offset', cam.o)
 	shader:send('wrap', wrap and 1 or 0)
-	
+
 	shader:send('x1', cam.x1) shader:send('y1', cam.y1)
 	shader:send('x2', cam.x2) shader:send('y2', cam.y2)
-	
+
 	lg.setShader(shader)
 	lg.draw(cam.rendercanvas)
 	lg.setShader()
@@ -156,33 +156,33 @@ local function toScreen(cam,x,y)
 	local space_x = (-obj_x*cam.x1 - obj_y*cam.y1)
 	local space_y = (obj_x*cam.x2 + obj_y*cam.y2)*cam.f
 
-	local distance = 1-(space_y) 
+	local distance = 1-(space_y)
 	local screen_x = ( space_x / distance )*cam.o*cam.sw+cam.sw/2
 	local screen_y = ( (space_y + cam.o-1) / distance )*cam.sh+cam.sh
-	
+
 	--Should be approximately one pixel on the plane
 	local size = ((1/distance)/cam.z*cam.o)*cam.sw
-	
+
 	return screen_x, screen_y, size
 end
 
 local function toWorld(cam,x,y)
 	local sx = (cam.sw/2 - x)*cam.z/(cam.sw/cam.sh)
 	local sy = (cam.o*cam.sh - y)*(cam.z/cam.f)
-	
+
 	local rotx = sx*cam.x1 + sy*cam.y1
 	local roty = sx*cam.x2 + sy*cam.y2
-	
+
 	return (rotx/y + cam.x), (roty/y + cam.y)
 end
 
 --Sprites:
 local function placeSprite(cam, ...)
 	local arg = {...}
-	
+
 	--Q is 1 if there is a quad argument, otherwise it's 0.
 	local q = type(arg[2]) ~= "number" and 1 or 0
-	
+
 	local wx,wy,s=toScreen(cam,arg[2+q] or 0,arg[3+q] or 0)
 
 	local width, height
@@ -192,24 +192,24 @@ local function placeSprite(cam, ...)
 		local x,y,w,h = arg[2]:getViewport()
 		width, height = w,h
 	end
-	
+
 	local sx2 = (s*(arg[5+q] or 1))/width
 	local sy2 = arg[6+q] and (s*arg[6+q])/height or sx2
-	
+
 	--If scale is flipped unintentionally. (When it is behind the camera.)
 	if (sx2 > 0) == ((arg[5+q] or 1) > 0) and (sy2 > 0) == ((arg[6+q] or 1) > 0) then
 		--We draw!
 		arg[2+q],arg[3+q] = wx, wy
-		
+
 		arg[5+q] = sx2
 		arg[6+q] = sy2
-		
-		arg[7+q] = arg[7+q] or width/2 
+
+		arg[7+q] = arg[7+q] or width/2
 		arg[8+q] = arg[8+q] or height
-		
+
 		arg.color = {lg.getColor()}
 		arg.dist = s
-		
+
 		insert(cam.buffer,arg)
 	end
 end
@@ -217,17 +217,17 @@ end
 local function renderSprites(cam)
 	if cam.buffer then
 		local prevColor = {lg.getColor()}
-		
+
 		sort(cam.buffer,function(a,b) return a.dist < b.dist end)
-		
+
 		for i=1,#cam.buffer do
 			local arg = cam.buffer[i]
 			if arg.color then lg.setColor(arg.color) end
-			lg.draw(unpack(arg)) 
+			lg.draw(unpack(arg))
 		end
-		
+
 		cam.buffer = {}
-		
+
 		lg.setColor(prevColor)
 	end
 end
@@ -237,6 +237,6 @@ PM.drawPlane = drawPlane
 PM.toScreen = toScreen
 PM.toWorld = toWorld
 PM.placeSprite = placeSprite
-PM.renderSprites = renderSprites 
+PM.renderSprites = renderSprites
 
 return PM

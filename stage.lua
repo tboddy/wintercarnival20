@@ -4,6 +4,7 @@ local function loadEnemies()
   local types = {'block', 'blockback', 'fairygreen', 'fairyblue', 'fairyred', 'chip', 'keg', 'scorpion'}
   for i = 1, 32 do stage.enemies[i] = {} end
   for i = 1, #types do images[types[i]] = love.graphics.newImage('img/enemies/' .. types[i] .. '.png') end
+  images.border1 =  love.graphics.newImage('img/enemies/border1.png')
 end
 
 local function loadBullets()
@@ -45,6 +46,8 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.seen = false
   enemy.score = 250
   enemy.hit = false
+  enemy.boss = false
+  enemy.borderRotation = 0
   if math.random() < .5 then enemy.xScale = 1 else enemy.xScale = -1 end
   local mod = math.pi / 30
   enemy.rotation = -mod + mod * 2 * math.random()
@@ -69,6 +72,7 @@ local function updateEnemy(enemy)
     enemy.x = enemy.x + math.cos(enemy.angle) * enemy.speed
     enemy.y = enemy.y + math.sin(enemy.angle) * enemy.speed
     enemy.updateFunc(enemy)
+    enemy.borderRotation = enemy.borderRotation + .0025
     if enemy.x < -enemy.width / 2 or enemy.x > stg.width + enemy.width / 2 or enemy.y < -enemy.height / 2 or enemy.y > stg.height + enemy.height / 2 then enemy.active = false end
     enemy.clock = enemy.clock + 1
   elseif not enemy.seen and enemy.active then
@@ -111,11 +115,13 @@ local function updateBullet(bullet)
   elseif bullet.clock % bulletAnimateMax >= bulletAnimateInterval * 3 then bullet.animateIndex = 3 end
 	if string.find(bullet.type, 'bolt') or string.find(bullet.type, 'arrow') or string.find(bullet.type, 'pill') then bullet.rotation = bullet.angle end
 	bullet.clock = bullet.clock + 1
-	if bullet.x < -bullet.width or bullet.x > stg.width + bullet.width or bullet.y < -bullet.height or bullet.y > stg.height + bullet.height then bullet.active = false
-	elseif stage.killBullets then
-		explosion.spawn({x = bullet.x, y = bullet.y})
+	if bullet.x < -bullet.width * 2 or bullet.x > stg.width + bullet.width * 2 or bullet.y < -bullet.height * 2 or bullet.y > stg.height + bullet.height * 2 then bullet.active = false
+	elseif killBulletClock > 0 then
+    if string.find(bullet.type, 'Red') then explosion.spawn({x = bullet.x, y = bullet.y, type = 'red'}) else explosion.spawn({x = bullet.x, y = bullet.y}) end
 		bullet.active = false
-	end
+	elseif bullet.active and player.invulnerableClock == 0 then
+    if math.sqrt((player.x - bullet.x) * (player.x - bullet.x) + (player.y - bullet.y) * (player.y - bullet.y)) < 1 + bullet.height / 2 then player.getHit(bullet) end
+  end
 end
 
 local function spawnChip(opts)
@@ -128,17 +134,19 @@ local function spawnChip(opts)
   chip.flipped = false
   chip.direction = math.random() < .5
   chip.speed = 3
+  chip.clock = 0
+  chip.rotation = math.tau * math.random()
 end
 
 local function updateChip(chip)
   if chip.flipped then
     local angle = stg.getAngle(chip, player)
-    chip.speed = chip.speed + .25
+    chip.speed = chip.speed + .5
     chip.x = chip.x + math.cos(angle) * chip.speed
     chip.y = chip.y + math.sin(angle) * chip.speed
     local dx = player.x - chip.x
     local dy = player.y - chip.y
-    if math.sqrt(dx * dx + dy * dy) < 8 + chipSize / 2 then
+    if math.sqrt(dx * dx + dy * dy) < 10 + chipSize / 2 then
       chip.active = false
       stg.score = stg.score + 1500
     end
@@ -155,6 +163,7 @@ local function updateChip(chip)
       if math.sqrt((player.x - chip.x) * (player.x - chip.x) + (player.y - chip.y) * (player.y - chip.y)) < 52 + chipSize / 2 then chip.flipped = true end
     end
   end
+  chip.clock = chip.clock + 1
 end
 
 local function spawnBlock(opts)
@@ -195,9 +204,15 @@ local function update()
     stage.killBullets = false
   end
   if killBulletClock > 0 then killBulletClock = killBulletClock - 1 end
+  stage.killBulletClock = killBulletClock
 end
 
 local function drawEnemy(enemy)
+  if enemy.boss then
+    love.graphics.setColor(stg.colors.redDark)
+    love.graphics.draw(images.border1, enemy.x, enemy.y, enemy.borderRotation, 1, 1, images.border1:getWidth() / 2, images.border1:getHeight() / 2)
+      love.graphics.setColor(stg.colors.white)
+  end
   love.graphics.draw(images[enemy.type], enemy.x, enemy.y, enemy.rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
 end
 
@@ -230,10 +245,20 @@ local function drawBlocks()
 end
 
 local function drawChip(chip)
-  love.graphics.setColor(stg.colors.brown)
-  stg.mask('half', function() love.graphics.circle('fill', chip.x - .5, chip.y - .5, chipSize / 2 + 1) end)
+  love.graphics.setColor(stg.colors.yellow); love.graphics.draw(images.chip, chip.x, chip.y - 1, chip.rotation, 1, 1, chipSize / 2, chipSize / 2)
+  love.graphics.setColor(stg.colors.offWhite); stg.mask('quarter', function() love.graphics.draw(images.chip, chip.x, chip.y - 1, chip.rotation, 1, 1, chipSize / 2, chipSize / 2) end)
+  love.graphics.setColor(stg.colors.yellowDark)
+  -- stg.mask('half', function() love.graphics.circle('line', chip.x, chip.y, 16) end)
+  love.graphics.draw(images.chip, chip.x, chip.y, chip.rotation, 1, 1, chipSize / 2, chipSize / 2)
+  love.graphics.setColor(stg.colors.yellow)
+  local interval = 20
+  local max = interval * 4
+  if(chip.clock % max >= interval and chip.clock % max < interval * 2) or (chip.clock % max >= interval * 3) then
+    stg.mask('quarter', function() love.graphics.draw(images.chip, chip.x, chip.y, chip.rotation, 1, 1, chipSize / 2, chipSize / 2) end)
+  elseif chip.clock % max >= interval * 2 and chip.clock % max < interval * 3 then
+    stg.mask('half', function() love.graphics.draw(images.chip, chip.x, chip.y, chip.rotation, 1, 1, chipSize / 2, chipSize / 2) end)
+  end
   love.graphics.setColor(stg.colors.white)
-  love.graphics.draw(images.chip, chip.x, chip.y, 0, 1, 1, chipSize / 2, chipSize / 2)
 end
 
 local function draw()
@@ -253,5 +278,6 @@ return {
   spawnEnemy = spawnEnemy,
   spawnBullet = spawnBullet,
   spawnBlock = spawnBlock,
-  killBullets = false
+  killBullets = false,
+  killBulletClock = 0
 }

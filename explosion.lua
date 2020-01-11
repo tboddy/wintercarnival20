@@ -14,22 +14,24 @@ local function load()
 end
 
 local function spawn(opts)
-	local exp = explosions[stg.getIndex(explosions)]
-  exp.active = true
-  exp.x = opts.x
-  exp.y = opts.y
-  exp.current = 0
-  exp.clock = 0
-  if opts.type then exp.type = opts.type else exp.type = 'blue' end
-  if opts.big then
-    exp.xScale = 2
-    exp.yScale = 2
-  else
-    exp.xScale = 1
-    exp.yScale = 1
+  if (opts.enemy and stage.killBulletClock == 0) or not opts.enemy then
+  	local exp = explosions[stg.getIndex(explosions)]
+    exp.active = true
+    exp.x = opts.x
+    exp.y = opts.y
+    exp.current = 0
+    exp.clock = 0
+    if opts.type then exp.type = opts.type else exp.type = 'blue' end
+    if opts.big then
+      exp.xScale = 2
+      exp.yScale = 2
+    else
+      exp.xScale = 1
+      exp.yScale = 1
+    end
+    if math.random() < .5 then exp.xScale = exp.xScale * -1 end
+    if math.random() < .5 then exp.yScale = exp.yScale * -1 end
   end
-  if math.random() < .5 then exp.xScale = exp.xScale * -1 end
-  if math.random() < .5 then exp.yScale = exp.yScale * -1 end
 end
 
 local function updateExplosion(exp)

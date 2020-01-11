@@ -9,8 +9,8 @@ local function waveOne()
         stage.spawnBullet(function(bullet)
           bullet.x = enemy.x
           bullet.y = enemy.y
-          bullet.speed = 1.7 + math.random() * .05
-          if fast then bullet.speed = bullet.speed + .6 end
+          bullet.speed = 2.25 + math.random() * .05
+          if fast then bullet.speed = bullet.speed + .8 end
           bullet.angle = angle
           bullet.type = 'big'
         end)
@@ -24,7 +24,7 @@ local function waveOne()
   end
   local function ray(enemy)
     local function spawnBullet()
-      local mod = math.pi / 25
+      local mod = math.pi / 20
       local angle = stg.getAngle(enemy, player) - mod + mod * 2 * math.random()
       stage.spawnBullet(function(bullet)
         bullet.x = enemy.x
@@ -35,14 +35,14 @@ local function waveOne()
         if math.random() < .5 then bullet.type = 'bigRed' else bullet.type = 'smallRed' end
       end)
     end
-    for i = 1, 15 do spawnBullet() end
+    for i = 1, 9 do spawnBullet() end
   end
   local function spawnEnemy(opposite1, opposite2, yOffset)
     stage.spawnEnemy(function(enemy)
       local offset1 = stg.grid * 3 - 2
       local offset2 = stg.grid * 3
       enemy.x = stg.width - offset1; if opposite2 then enemy.x = offset1 end
-      enemy.y = -16 - yOffset * (stg.grid * 4)
+      enemy.y = -16 - yOffset * (stg.grid * 3)
       enemy.speed = 1.75
       enemy.angle = math.pi / 2
       enemy.type = 'fairygreen'; if opposite2 then enemy.type = 'fairyred' end
@@ -65,7 +65,7 @@ local function waveOne()
       end
     end)
   end
-  local yOffset = 4.75
+  local yOffset = 4.5
   local function spawnEnemies()
     for i = 0, 3 do
       spawnEnemy(false, false, i)
@@ -238,7 +238,7 @@ local function bossOne()
         local function spawnBullet(xOffset)
           local x = stg.width / 2 + stg.grid * xOffset
           local y = stg.grid * 4 - enemy.flags.yOffset * 6
-          if exp then explosion.spawn({x = x, y = y}) end
+          if exp then explosion.spawn({x = x, y = y, enemy = true}) end
           stage.spawnBullet(function(bullet)
             local mod = .03
             bullet.x = x
@@ -312,9 +312,10 @@ end
 local function bossTwo()
   local function spellOne(enemy)
     local function sides()
+      local xDiff = stg.grid * 2.5
       local function spawnBullet(xOffset)
         stage.spawnBullet(function(bullet)
-          bullet.x = enemy.x - stg.grid * 2.5 * xOffset
+          bullet.x = enemy.x - xDiff * xOffset
           bullet.y = enemy.y
           bullet.speed = 2 + math.random() / 2
           bullet.angle = math.tau * math.random()
@@ -322,8 +323,8 @@ local function bossTwo()
           if math.random() < .5 then bullet.type = 'pill' else bullet.type = 'bolt' end
         end)
       end
-      if enemy.clock % 30 == 0 then explosion.spawn({x = enemy.x - stg.grid * 2, y = enemy.y}) end
-      if enemy.clock % 30 == 15 then explosion.spawn({x = enemy.x + stg.grid * 2, y = enemy.y}) end
+      if enemy.clock % 30 == 0 then explosion.spawn({x = enemy.x - xDiff, y = enemy.y, enemy = true}) end
+      if enemy.clock % 30 == 15 then explosion.spawn({x = enemy.x + xDiff, y = enemy.y, enemy = true}) end
       spawnBullet(-1)
       spawnBullet(1)
     end
@@ -345,87 +346,161 @@ local function bossTwo()
       end
       if enemy.clock % 90 == 45 then
         spawnBullets()
-        explosion.spawn({x = enemy.x, y = enemy.y, big = true, type = 'red'})
+        explosion.spawn({x = enemy.x, y = enemy.y, big = true, type = 'red', enemy = true})
       end
     end
     sides()
     middle()
   end
   local function spellTwo(enemy)
-    local function spawnBullets(opposite)
-      if opposite then angle = enemy.flags.middleAngleFlip1 else angle = enemy.flags.middleAngleFlip2 end
-      local count = 8 * 6
-      local function spawnBullet()
-        stage.spawnBullet(function(bullet)
-          bullet.x = enemy.x
-          bullet.y = enemy.y
-          bullet.angle = angle
-          bullet.speed = 2 + math.random() * .075
-          if opposite then bullet.type = 'smallRed'; bullet.speed = bullet.speed + .5; bullet.top = true else bullet.type = 'big' end
-        end)
+    local function circle()
+      local function spawnBullets(opposite)
+        if opposite then angle = enemy.flags.middleAngleFlip1 else angle = enemy.flags.middleAngleFlip2 end
+        local count = 8 * 6
+        local function spawnBullet()
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.angle = angle
+            bullet.speed = 3
+            if opposite then bullet.type = 'smallRed'; bullet.speed = bullet.speed + .5; bullet.top = true else bullet.type = 'bolt' end
+          end)
+        end
+        for i = 1, count do
+          if i % 8 < 4 then spawnBullet() end
+          angle = angle + math.tau / count
+        end
       end
-      for i = 1, count do
-        if i % 8 < 4 then spawnBullet() end
-        angle = angle + math.tau / count
+      local interval = 10
+      local middleAngleMod = .05
+      if not enemy.flags.middleAngleFlip1 then
+        enemy.flags.middleAngleFlip1 = math.pi
+        enemy.flags.middleAngleFlip2 = math.pi
+      end
+      if enemy.clock % 15 == 0 then
+        local type = false if enemy.clock % 30 == 0 then type = 'red' end
+        explosion.spawn({x = enemy.x, y = enemy.y, type = type, enemy = true})
+      end
+      if enemy.clock % interval == 0 then
+        spawnBullets(enemy.clock % (interval * 2) == 0)
+        enemy.flags.middleAngleFlip1 = enemy.flags.middleAngleFlip1 + middleAngleMod
+        enemy.flags.middleAngleFlip2 = enemy.flags.middleAngleFlip2 - middleAngleMod
       end
     end
-    local interval = 10
-    local middleAngleMod = .05
-    if not enemy.flags.middleAngleFlip1 then
-      enemy.flags.middleAngleFlip1 = math.pi
-      enemy.flags.middleAngleFlip2 = math.pi
+    local function burst()
+      local count = 32
+      local function spawnBullets(speedMod)
+        local angle = enemy.flags.burstAngle + math.pi / 4
+        local function spawnBullet(index)
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.angle = angle
+            bullet.speed = 2.2 + speedMod * .2
+            bullet.type = 'bigRed'
+            bullet.opposite = index % 2 == 0
+          end, function(bullet)
+            local mod = .0035
+            if bullet.opposite then mod = mod * -1 end
+            bullet.angle = bullet.angle + mod
+          end)
+        end
+        for i = 1, count do
+          spawnBullet(i)
+          angle = angle + math.tau / count
+        end
+      end
+      local interval = 3
+      local start = interval * 5
+      local limit = interval * 10
+      if enemy.flags.burstClock >= start and enemy.flags.burstClock % interval == 0 and enemy.flags.burstClock < limit + start then
+        -- if enemy.flags.burstClock == start + limit / 2 then enemy.flags.burstAngle = enemy.flags.burstAngle + math.pi / count end
+        spawnBullets((enemy.flags.burstClock - start) / interval)
+      end
     end
-    if enemy.clock % 15 == 0 then
-      local type = false if enemy.clock % 30 == 0 then type = 'red' end
-      explosion.spawn({x = enemy.x, y = enemy.y, type = type})
-    end
-    if enemy.clock % interval == 0 then
-      spawnBullets(enemy.clock % (interval * 2) == 0)
-      enemy.flags.middleAngleFlip1 = enemy.flags.middleAngleFlip1 + middleAngleMod
-      enemy.flags.middleAngleFlip2 = enemy.flags.middleAngleFlip2 - middleAngleMod
+    local limit = 60 * 4
+    local max = limit + 75
+    if enemy.clock % max < limit then
+      enemy.flags.burstClock = false
+      circle()
+    else
+      if not enemy.flags.burstClock then
+        enemy.flags.burstClock = 0
+        enemy.flags.burstAngle = stg.getAngle(enemy, player)
+      end
+      burst()
+      enemy.flags.burstClock = enemy.flags.burstClock + 1
     end
   end
   local function spellThree(enemy)
-    local function spawnBullets(opposite)
-      local angle = enemy.flags.spellThreeAngle2; if opposite then angle = enemy.flags.spellThreeAngle1 end
-      local count = 3
-      local function spawnBullet()
-        stage.spawnBullet(function(bullet)
-          bullet.x = enemy.x
-          bullet.y = enemy.y
-          bullet.speed = 2 + math.random() * .15
-          bullet.angle = angle
-          bullet.type = 'bolt'
-        end)
+    local function blast()
+      local function spawnBullets(opposite)
+        local angle = enemy.flags.spellThreeAngle2; if opposite then angle = enemy.flags.spellThreeAngle1 end
+        local count = 3
+        local function spawnBullet()
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.speed = 2.5
+            bullet.angle = angle
+            bullet.type = 'bolt'
+          end)
+        end
+        for i = 1, count do
+          spawnBullet()
+          angle = angle + math.tau / count
+        end
       end
-      for i = 1, count do
-        spawnBullet()
-        angle = angle + math.tau / count
+      if not enemy.flags.spellThreeAngle1 then
+        enemy.flags.spellThreeAngle1 = math.pi / 2
+        enemy.flags.spellThreeAngle2 = math.pi / 2
+      end
+      if enemy.clock % 15 == 0 then explosion.spawn({x = enemy.x, y = enemy.y, enemy = true}) end
+      if enemy.clock % 3 == 0 then
+        spawnBullets()
+        spawnBullets(true)
+        local angleMod = math.pi / 21
+        enemy.flags.spellThreeAngle1 = enemy.flags.spellThreeAngle1 + angleMod
+        enemy.flags.spellThreeAngle2 = enemy.flags.spellThreeAngle2 - angleMod
       end
     end
-    if not enemy.flags.spellThreeAngle1 then
-      enemy.flags.spellThreeAngle1 = math.pi
-      enemy.flags.spellThreeAngle2 = math.pi
+    local function burst()
+      local function spawnBullets()
+        local angle = stg.getAngle(enemy, player)
+        local function spawnBullet()
+          local angleMod = math.pi / 15
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.speed = 1.5 + math.random() * 1
+            bullet.top = true
+            bullet.angle = angle - angleMod + angleMod * 2 * math.random()
+            if math.random() < .5 then bullet.type = 'bigRed' else bullet.type = 'smallRed' end
+          end)
+        end
+        for i = 1, 15 do spawnBullet() end
+        explosion.spawn({x = enemy.x, y = enemy.y, type = 'red', big = true, enemy = true})
+      end
+      if enemy.clock % 90 == 0 and enemy.clock > 0 then spawnBullets() end
     end
-    if enemy.clock % 15 == 0 then explosion.spawn({x = enemy.x, y = enemy.y}) end
-    if enemy.clock % 3 == 0 then
-      spawnBullets()
-      spawnBullets(true)
-      local angleMod = .125
-      enemy.flags.spellThreeAngle1 = enemy.flags.spellThreeAngle1 + angleMod
-      enemy.flags.spellThreeAngle2 = enemy.flags.spellThreeAngle2 - angleMod
-    end
+    blast()
+    burst()
   end
-  local function spellFour(enemy) end
-  local function spellFive(enemy) end
+  local function spellFour(enemy)
+
+  end
+  local function spellFive(enemy)
+
+  end
   stage.spawnEnemy(function(enemy)
     enemy.x = stg.width / 2
     enemy.y = -134 / 2
     enemy.type = 'keg'
     enemy.speed = 3.25
     enemy.angle = math.pi / 2
+    enemy.boss = true
     enemy.rotation = 0
-    enemy.health = 50
+    enemy.health = 150
     enemy.xScale = 1
     enemy.flags.rotateCount = 0
     enemy.flags.hitSpellTwo = false
@@ -436,9 +511,9 @@ local function bossTwo()
   end, function(enemy)
     stg.slowEntity(enemy, 0, .05)
     if enemy.speed == 0 then
-      local currentSpell = spellOne
+      local currentSpell = spellTwo
       if enemy.health < enemy.maxHealth / 3 * 2 and enemy.health >= enemy.maxHealth / 3 then
-        currentSpell = spellTwo
+        currentSpell = spellOne
         if not enemy.flags.hitSpellTwo then
           enemy.flags.hitSpellTwo = true
           enemy.clock = -killBulletLimit
@@ -459,7 +534,7 @@ local function bossTwo()
   end)
 end
 
-local currentWave = bossTwo
+local currentWave = waveOne
 local clock = 0
 local waveClock = 0
 

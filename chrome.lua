@@ -55,12 +55,12 @@ end
 local function drawLives()
   love.graphics.setColor(stg.colors.black)
   love.graphics.draw(images.heart, stg.width - 8 * 3 - 4 + 1, stg.height - 4 - 8 + 1)
-  love.graphics.setColor(stg.colors.yellow)
-  love.graphics.draw(images.heart, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
   love.graphics.setColor(stg.colors.redLight)
+  love.graphics.draw(images.heart, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
+  love.graphics.setColor(stg.colors.red)
   love.graphics.draw(images.heartShadow, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
   love.graphics.setColor(stg.colors.white)
-  drawLabel({input = 'x2', y = stg.height - 8 - 4,  align = {type = 'right', width = stg.width - 4}})
+  drawLabel({input = 'x' .. player.lives, y = stg.height - 8 - 4,  align = {type = 'right', width = stg.width - 4}})
 end
 
 local function drawBonusOverlay()

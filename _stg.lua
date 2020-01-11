@@ -1,5 +1,3 @@
-hc = require('lib/hc')
-
 math.tau = math.pi * 2
 
 local function colors()
@@ -65,7 +63,8 @@ end
 local masks = {
   half = love.graphics.newImage('img/masks/half.png'),
   quarter = love.graphics.newImage('img/masks/quarter.png'),
-	most = love.graphics.newImage('img/masks/most.png')
+  most = love.graphics.newImage('img/masks/most.png'),
+	fade = love.graphics.newImage('img/masks/fade.png')
 }
 local maskShader = love.graphics.newShader([[vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords){ if(Texel(texture, texture_coords).rgb == vec3(0.0)) {discard;} return vec4(1.0); }]])
 local function doMask(mask, callback)

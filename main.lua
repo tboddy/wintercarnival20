@@ -23,18 +23,20 @@ end
 
 function love.load()
 	math.randomseed(1419)
-  love.window.setTitle('hahaha ahahah ahhhh ahhh AHHHHHHHHH')
+  love.window.setTitle('excited to vomit: the positive drinking attitude')
 	container = love.graphics.newCanvas(stg.width, stg.height)
 	container:setFilter('nearest', 'nearest')
 	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
 	love.graphics.setFont(stg.font)
+  love.graphics.setLineStyle('rough')
+  love.graphics.setLineWidth(1)
   controls.load()
   sound.load()
   if stg.started then loadGame()
   else start.load() end
 end
 
-function love.update(d)
+function love.update()
 	if controls.quit() then love.event.quit()
 	elseif controls.reload() then love.event.quit('restart') end
   if stg.started then

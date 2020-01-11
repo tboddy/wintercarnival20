@@ -32,7 +32,7 @@ local function load()
 end
 
 local function updateMove()
-  local speed = 3; if controls.focus() then speed = 1.5 end
+  local speed = 2.75; if controls.focus() then speed = 1.5 end
   local xSpeed = 0; if controls.left() then xSpeed = -1 elseif controls.right() then xSpeed = 1 end
   local ySpeed = 0; if controls.up() then ySpeed = -1 elseif controls.down() then ySpeed = 1 end
   local fSpeed = speed / math.sqrt(math.max(xSpeed + ySpeed, 1))
@@ -45,7 +45,7 @@ local function updateMove()
 end
 
 local function spawnBullet(opts)
-	local diff = math.pi / 4.5
+	local diff = math.pi / 8
   local bullet = bullets[stg.getIndex(bullets)]
   local offset = 4
 	bullet.active = true
@@ -58,11 +58,12 @@ local function spawnBullet(opts)
   -- bullet.collider = hc.circle(bullet.x, bullet.y, size)
   -- bullet.collider.type = 'playerBullet'
   if opts.bottom then bullet.y = bullet.y + 4 else bullet.y = bullet.y - 4 end
-  local drunk = .015
+  local drunk = .025
   bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
 end
 
 local function updateBullet(bullet)
+  local drunkMod = 8
 	bullet.x = bullet.x + math.cos(bullet.angle) * bulletSpeed
 	bullet.y = bullet.y + math.sin(bullet.angle) * bulletSpeed
 	if bullet.x < -bulletWidth * 2 or bullet.x > stg.width + bulletWidth * 2 or bullet.y < -bulletHeight * 2 or bullet.y > stg.height + bulletHeight * 2 then bullet.active = false
@@ -105,8 +106,8 @@ local function updateShot()
 		if shotClock % interval == 0 and shotClock < limit then
       sound.sfx = 'playerbullet'
       spawnBullet({mod = 0, double = true})
-      -- spawnBullet({mod = 1})
-      -- spawnBullet({mod = -1})
+      spawnBullet({mod = 1})
+      spawnBullet({mod = -1})
       -- spawnBullet({mod = 1, bottom = true})
       -- spawnBullet({mod = -1, bottom = true})
     end
@@ -117,22 +118,32 @@ local function updateShot()
 end
 
 local function kill()
+end
+
+local function getHit(bullet)
   if invulnerableClock == 0 then
-    -- explosion.spawn({x = pos.x, y = pos.y, big = true})
+    stage.killBullets = true
+    bullet.active = false
+    local expObj = {x = x, y = y, big = true}
+    if string.find(bullet.type, 'Red') then expObj.type = 'red' end
+    explosion.spawn(expObj)
     if lives > 0 then
       lives = lives - 1
       invulnerableClock = invulnerableLimit
       x = initX
-      x = initY
-    else stg.gameOver = true end
+      y = initY
+    end
+    -- else stg.gameOver = true end
   end
 end
 
 local function update()
   if not stg.gameOver and invulnerableClock < invulnerableLimit - 20 then updateMove() end
   updateShot()
-  clock = clock + 1
   if invulnerableClock > 0 then invulnerableClock = invulnerableClock - 1 end
+  clock = clock + 1
+  player.invulnerableClock = invulnerableClock
+  player.lives = lives
 end
 
 local function drawBullet(bullet)
@@ -141,15 +152,25 @@ local function drawBullet(bullet)
   love.graphics.draw(img, bullet.x, bullet.y, bullet.angle, 1, 1, bulletWidth / 2, size / 2)
 end
 
-local function draw()
-  if controls.focus() then
-    love.graphics.setColor(stg.colors.red)
-    love.graphics.draw(images.border, x - 1, y, 0, 1, 1, borderSize / 2, borderSize / 2)
-    love.graphics.setColor(stg.colors.white)
+local function drawPlayer()
+  local canDraw = false
+  local interval = 30
+  if invulnerableClock % interval < interval / 2 then canDraw = true end
+  if canDraw then
+    love.graphics.draw(images.idle, x, y, 0, 1, 1, width / 2, height / 2)
+    if controls.focus() then love.graphics.draw(images.hitbox, x, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2) end
   end
+end
+
+local function draw()
+  -- if controls.focus() then
+  --   love.graphics.setColor(stg.colors.red)
+  --   love.graphics.draw(images.border, x - 1, y, 0, 1, 1, borderSize / 2, borderSize / 2)
+  --   love.graphics.setColor(stg.colors.white)
+  -- end
   stg.mask('half', function() for i = 1, #bullets do if bullets[i].active then drawBullet(bullets[i]) end end end)
-  love.graphics.draw(images.idle, x, y, 0, 1, 1, width / 2, height / 2)
-  if controls.focus() then love.graphics.draw(images.hitbox, x, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2) end
+
+  drawPlayer()
 end
 
 return {
@@ -157,5 +178,10 @@ return {
   update = update,
   draw = draw,
   x = x,
-  y = y
+  y = y,
+  height = height,
+  hit = false,
+  invulnerableClock = 0,
+  getHit = getHit,
+  lives = 0
 }
