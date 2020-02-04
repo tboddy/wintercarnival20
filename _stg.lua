@@ -34,8 +34,8 @@ end
 
 local function processScore(input)
   local score = tostring(input)
-  if input == 0 then score = '00' end
-	for i = 1, 8 - #score do score = ' ' .. score end
+  -- if input == 0 then score = '0' end
+	for i = 1, 8 - #score do score = '0' .. score end
 	return score
 end
 
@@ -80,7 +80,8 @@ end
 
 return {
   scale = 3,
-  width = 256,
+  winWidth = 320,
+  width = 240,
   height = 240,
   loaded = false,
   started = true,
@@ -95,8 +96,7 @@ return {
   highScore = 0,
   slowEntity = slowEntity,
   mask = doMask,
-  font = love.graphics.newFont('fonts/8.ttf', 8),
-  fontBig = love.graphics.newFont('fonts/16.ttf', 13),
+  font = love.graphics.newFont('fonts/Ibara.ttf', 7),
   loadImages = loadImages,
   timeLimit = 60 * 2
 }

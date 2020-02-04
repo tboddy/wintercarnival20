@@ -1,46 +1,85 @@
-local images
+local images, menuItems, currentMenuItem, movingMenu
 
 local function load()
   images = {
     bg = love.graphics.newImage('img/start/bg.png'),
     logo = love.graphics.newImage('img/start/logo.png'),
-    peace = love.graphics.newImage('img/start/peace.png')
+    subLogo = love.graphics.newImage('img/start/sublogo.png')
   }
   stg.loadImages(images)
+  menuItems = {'Game Start', 'Config', 'Score', 'Exit'}
+  currentMenuItem = 1
+  movingMenu = false
 end
 
 local function update()
-  if controls.shot() then loadGame() end
+  if controls.up() and not movingMenu then
+    currentMenuItem = currentMenuItem - 1
+    movingMenu = true
+  elseif controls.down() and not movingMenu then
+    currentMenuItem = currentMenuItem + 1
+    movingMenu = true
+  elseif not controls.up() and not controls.down() then movingMenu = false end
+  if currentMenuItem < 1 then currentMenuItem = #menuItems
+  elseif currentMenuItem > #menuItems then currentMenuItem = 1 end
+  if controls.shot() then
+    if currentMenuItem == 1 then loadGame()
+    elseif currentMenuItem == 5 then love.event.quit() end
+  end
 end
 
 local function drawTitle()
-  local y = stg.grid
-  chrome.drawLabel({input = 'WINTER CARNIVAL \'20', y = y, align = {type = 'center'}})
+  local x = stg.winWidth / 2
+  local y = stg.grid * 1.5
+  local offset = stg.grid * 2 + 12
   love.graphics.setColor(stg.colors.black)
-  love.graphics.draw(images.logo, stg.width / 2 - images.logo:getWidth() / 2 + 1, y + 1 + stg.grid / 2 + 7)
+  love.graphics.draw(images.logo, x + 1, y + 1, 0, 1, 1, images.logo:getWidth() / 2, 0)
+  love.graphics.draw(images.subLogo, x + 1, y + offset + 1, 0, 1, 1, images.subLogo:getWidth() / 2, 0)
   love.graphics.setColor(stg.colors.offWhite)
-  love.graphics.draw(images.logo, stg.width / 2 - images.logo:getWidth() / 2, y + stg.grid / 2 + 7)
+  love.graphics.draw(images.logo, x, y, 0, 1, 1, images.logo:getWidth() / 2, 0)
+  love.graphics.draw(images.subLogo, x, y + offset, 0, 1, 1, images.subLogo:getWidth() / 2, 0)
   love.graphics.setColor(stg.colors.white)
-  chrome.drawLabel({input = ' THE POSITIVE', y = y + images.logo:getHeight() + stg.grid + 8, align = {type = 'center'}})
-  chrome.drawLabel({input = 'DRINKING ATTITUDE', y = y + images.logo:getHeight() + stg.grid + 12 + 8, align = {type = 'center'}})
 end
 
 local function drawCredits()
-  love.graphics.setColor(stg.colors.black)
-  love.graphics.draw(images.peace, 8 + 1, stg.height - images.peace:getHeight() - 8 + 1)
-  love.graphics.setColor(stg.colors.offWhite)
-  love.graphics.draw(images.peace, 8, stg.height - images.peace:getHeight() - 8)
+
+end
+
+local function drawArrow(x, y, shadow)
+  local color = stg.colors.yellowDark
+  if shadow then
+    color = stg.colors.black
+    x = x + 1
+    y = y + 1
+  end
+  love.graphics.setColor(color)
+  love.graphics.rectangle('fill', x, y, 1, 7)
+  love.graphics.rectangle('fill', x + 1, y + 1, 1, 5)
+  love.graphics.rectangle('fill', x + 2, y + 2, 1, 3)
+  love.graphics.rectangle('fill', x + 3, y + 3, 1, 1)
   love.graphics.setColor(stg.colors.white)
-  local x = 8 + 4 + images.peace:getWidth()
-  local y = stg.height - stg.grid
-  chrome.drawLabel({input = '2020 PEACE', x = x, y = y - 12})
-  chrome.drawLabel({input = 'RESEARCH CIRCLE', x = x, y = y})
+end
+
+local function drawMenu()
+  local x = stg.winWidth / 2 - 8 * 5
+  local y = stg.height / 2 + 16
+  local activeX = x - 10
+  for i = 1, #menuItems do
+    chrome.drawLabel({input = menuItems[i], x = x, y = y})
+    if i == currentMenuItem then
+      drawArrow(activeX, y, true)
+      drawArrow(activeX, y)
+    end
+    y = y + 12
+  end
 end
 
 local function draw()
   love.graphics.draw(images.bg, 0, 0)
+  drawMenu()
   drawTitle()
   drawCredits()
+  chrome.drawLabel({input = '2020 peace research', y = stg.height - 8 * 4, x = (stg.winWidth - stg.width) / 2, align = {type = 'center'}})
 end
 
 return {

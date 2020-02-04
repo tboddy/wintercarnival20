@@ -2,7 +2,7 @@ local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeig
 
 local function loadImages()
   images = {}
-  local imageFiles = {'idle', 'hitbox', 'bullet-double', 'bullet-single', 'border'}
+  local imageFiles = {'idle', 'idle-top', 'hitbox', 'bullet-double', 'bullet-single', 'border'}
   for i = 1, #imageFiles do images[imageFiles[i]] = love.graphics.newImage('img/player/' .. imageFiles[i] .. '.png') end
   stg.loadImages(images)
 end
@@ -13,8 +13,8 @@ local function load()
   initY = stg.height - stg.grid * 2
   x = initX
   y = initY
-  width = 28
-  height = 34
+  width = images.idle:getWidth()
+  height = images.idle:getHeight()
   bulletWidth = 28
   bulletHeight = 8
   bulletSpeed = 28
@@ -45,21 +45,17 @@ local function updateMove()
 end
 
 local function spawnBullet(opts)
-	local diff = math.pi / 8
+	local diff = math.pi / 9
   local bullet = bullets[stg.getIndex(bullets)]
   local offset = 4
 	bullet.active = true
 	bullet.angle = diff * opts.mod - math.pi / 2
   if opts.double then bullet.double = true else bullet.double = false end
-  if opts.bottom then bullet.angle = bullet.angle + math.pi end
 	bullet.x = x + math.cos(bullet.angle) * offset
 	bullet.y = y + math.sin(bullet.angle) * offset
   local size = bulletHeight / 2; if bullet.double then size = size * 2 end
-  -- bullet.collider = hc.circle(bullet.x, bullet.y, size)
-  -- bullet.collider.type = 'playerBullet'
-  if opts.bottom then bullet.y = bullet.y + 4 else bullet.y = bullet.y - 4 end
-  local drunk = .025
-  bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
+  -- local drunk = .025
+  -- bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
 end
 
 local function updateBullet(bullet)
@@ -74,14 +70,6 @@ local function updateBullet(bullet)
       if stage.enemies[i].active and stage.enemies[i].seen then
         if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + size then
           stage.enemies[i].health = stage.enemies[i].health - 1
-          kill = true
-        end
-      end
-    end
-    for i = 1, #stage.blocks do
-      if stage.blocks[i].active and stage.blocks[i].seen then
-        if math.sqrt((stage.blocks[i].x + 16 - bullet.x) * (stage.blocks[i].x + 16 - bullet.x) + (stage.blocks[i].y + 16 - bullet.y) * (stage.blocks[i].y + 16 - bullet.y)) < 16 + size then
-          stage.blocks[i].health = stage.blocks[i].health - 1
           kill = true
         end
       end
@@ -105,11 +93,9 @@ local function updateShot()
 	if not canShoot and not stg.gameOver then
 		if shotClock % interval == 0 and shotClock < limit then
       sound.sfx = 'playerbullet'
-      spawnBullet({mod = 0, double = true})
-      spawnBullet({mod = 1})
-      spawnBullet({mod = -1})
-      -- spawnBullet({mod = 1, bottom = true})
-      -- spawnBullet({mod = -1, bottom = true})
+      spawnBullet({mod = 0})
+      -- spawnBullet({mod = 1})
+      -- spawnBullet({mod = -1})
     end
 		shotClock = shotClock + 1
   end
@@ -122,17 +108,17 @@ end
 
 local function getHit(bullet)
   if invulnerableClock == 0 then
-    stage.killBullets = true
-    bullet.active = false
-    local expObj = {x = x, y = y, big = true}
-    if string.find(bullet.type, 'Red') then expObj.type = 'red' end
-    explosion.spawn(expObj)
-    if lives > 0 then
-      lives = lives - 1
-      invulnerableClock = invulnerableLimit
-      x = initX
-      y = initY
-    end
+    -- stage.killBullets = true
+    -- bullet.active = false
+    -- local expObj = {x = x, y = y, big = true}
+    -- if string.find(bullet.type, 'Red') then expObj.type = 'red' end
+    -- explosion.spawn(expObj)
+    -- if lives > 0 then
+    --   lives = lives - 1
+    --   invulnerableClock = invulnerableLimit
+    --   x = initX
+    --   y = initY
+    -- end
     -- else stg.gameOver = true end
   end
 end
@@ -158,6 +144,7 @@ local function drawPlayer()
   if invulnerableClock % interval < interval / 2 then canDraw = true end
   if canDraw then
     love.graphics.draw(images.idle, x, y, 0, 1, 1, width / 2, height / 2)
+    stg.mask('half', function() love.graphics.draw(images['idle-top'], x, y, 0, 1, 1, width / 2, height / 2) end)
     if controls.focus() then love.graphics.draw(images.hitbox, x, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2) end
   end
 end

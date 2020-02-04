@@ -23,7 +23,7 @@ local function updateSfx()
 end
 
 local function update()
-  updateSfx()
+  -- updateSfx()
 end
 
 return {
@@ -33,6 +33,6 @@ return {
   bgmFiles = {},
   sfx = false,
   bgm = false,
-	sfxVolume = 0,
-	bgmVolume = 0
+	sfxVolume = 1,
+	bgmVolume = 1
 }

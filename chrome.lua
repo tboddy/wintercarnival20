@@ -1,4 +1,4 @@
-local timeLeftStr, images
+local images, barOffset, barHeight, evadeMax, evadeWidth, bossMax, bossWidth, bossX
 
 local function load()
   images = {
@@ -6,24 +6,23 @@ local function load()
     heartShadow = love.graphics.newImage('img/chrome/heart-shadow.png')
   }
 	stg.loadImages(images)
-  timeLeftStr = '2:00'
-end
-
-local function updateTime()
-  local timeLeft = math.floor(stg.timeLimit - stg.clock / 60)
-  local minutes = '0'; if timeLeft >= 60 then minutes = '1' end
-  if timeLeft == 60 * 2 then minutes = '2' end
-  local seconds = math.floor(timeLeft % 60)
-  if seconds < 10 then seconds = '0' .. seconds end
-  timeLeftStr = minutes .. ':' .. seconds
+  barOffset = 4
+  barHeight = 7
+  evadeMax = 40
+  evadeWidth = 12
+  bossX = barOffset * 4 + evadeMax + 8 * 5
+  bossMax = 100 - barOffset
+  bossWidth = bossMax
 end
 
 local function update()
-  updateTime()
+  if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then
+    bossWidth = math.floor(stage.bossHealth / stage.bossMaxHealth * bossMax)
+  end
 end
 
 local function drawLabel(opts)
-  -- opts.input = string.upper(opts.input)
+  opts.input = string.upper(opts.input)
   local color = stg.colors.offWhite
 	local align = 'left'
 	local limit = stg.width
@@ -43,37 +42,57 @@ local function drawLabel(opts)
   if opts.big then love.graphics.setFont(stg.font) end
 end
 
-local function drawScore()
-  drawLabel({input = 'Score', x = 4, y = 4})
-  drawLabel({input = stg.processScore(stg.score), x = 4, y = 4 + 10})
-end
-
-local function drawTime()
-  drawLabel({input = timeLeftStr, x = 4, y = 4 + 10 * 2})
-end
-
-local function drawLives()
+local function drawFrame()
   love.graphics.setColor(stg.colors.black)
-  love.graphics.draw(images.heart, stg.width - 8 * 3 - 4 + 1, stg.height - 4 - 8 + 1)
-  love.graphics.setColor(stg.colors.redLight)
-  love.graphics.draw(images.heart, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
-  love.graphics.setColor(stg.colors.red)
-  love.graphics.draw(images.heartShadow, stg.width - 8 * 3 - 4, stg.height - 4 - 8)
+  love.graphics.rectangle('fill', stg.width, 0, stg.winWidth - stg.width, stg.height)
   love.graphics.setColor(stg.colors.white)
-  drawLabel({input = 'x' .. player.lives, y = stg.height - 8 - 4,  align = {type = 'right', width = stg.width - 4}})
 end
 
-local function drawBonusOverlay()
-  local y = 3
-  drawLabel({input = 'BONUS', color = 'yellow', y = y, big = true, align = {type = 'center'}})
-  drawLabel({input = '40000', color = 'yellow', y = y + stg.grid, big = true, align = {type = 'center'}})
+local function drawEvade()
+  love.graphics.setColor(stg.colors.brown)
+  stg.mask('half', function() love.graphics.rectangle('fill', barOffset, barOffset, evadeMax, barHeight) end)
+  love.graphics.setColor(stg.colors.brownLight)
+  love.graphics.rectangle('fill', barOffset, barOffset, evadeWidth, barHeight)
+  love.graphics.setColor(stg.colors.white)
+  local color = 'offWhite'
+  drawLabel({input = 'EVADE', x = barOffset * 2 + evadeMax, y = barOffset, color = color})
+end
+
+local function drawBoss()
+  love.graphics.setColor(stg.colors.blue)
+  stg.mask('half', function() love.graphics.rectangle('fill', bossX, barOffset, bossMax, barHeight) end)
+  love.graphics.setColor(stg.colors.blueLight)
+  love.graphics.rectangle('fill', bossX, barOffset, bossWidth, barHeight)
+  love.graphics.setColor(stg.colors.white)
+  drawLabel({input = 'ENEMY', x = bossX + barOffset + bossMax, y = barOffset})
+end
+
+local function drawSidebar()
+  local x = stg.width + barOffset * 2
+  local y = barOffset * 2
+  drawLabel({input = 'Hi Score', x = x, y = y})
+  y = y + 10
+  drawLabel({input = stg.processScore(stg.score), x = x, y = y})
+  y = y + 10 + barOffset
+  drawLabel({input = 'Score', x = x, y = y})
+  y = y + 10
+  drawLabel({input = stg.processScore(stg.score), x = x, y = y})
+  y = y + 10 + barOffset
+  drawLabel({input = 'Left', x = x, y = y})
+  drawLabel({input = player.lives, x = x, y = y, align = {type = 'right', width = 8 * 8}})
+  y = y + 10
+  drawLabel({input = 'Bomb', x = x, y = y})
+  drawLabel({input = 3, x = x, y = y, align = {type = 'right', width = 8 * 8}})
 end
 
 local function draw()
-  drawScore()
-  drawTime()
-  drawLives()
-  -- drawBonusOverlay()
+  drawFrame()
+  drawEvade()
+  if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
+  drawSidebar()
+  local fps = math.floor(love.timer.getFPS() / 60 * 10)
+  if fps > 61 or fps < 57 then fps = 60 end
+  drawLabel({input = fps .. ' fps', y = stg.height - barOffset * 2 - 8, align = {type = 'right', width = stg.winWidth - barOffset * 2}})
 end
 
 return {

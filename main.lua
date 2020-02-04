@@ -3,6 +3,7 @@ controls = require 'controls'
 sound = require 'sound'
 background = require 'background'
 player = require 'player'
+chips = require 'chips'
 stage = require 'stage'
 level = require 'level'
 explosion = require 'explosion'
@@ -14,6 +15,7 @@ local container
 function loadGame()
   background.load()
 	player.load()
+  chips.load()
   stage.load()
   explosion.load()
   chrome.load()
@@ -23,10 +25,10 @@ end
 
 function love.load()
 	math.randomseed(1419)
-  love.window.setTitle('excited to vomit: the positive drinking attitude')
-	container = love.graphics.newCanvas(stg.width, stg.height)
+  love.window.setTitle('psychedelic nightmare')
+	container = love.graphics.newCanvas(stg.winWidth, stg.height)
 	container:setFilter('nearest', 'nearest')
-	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
+	love.window.setMode(stg.winWidth * stg.scale, stg.height * stg.scale, {vsync = false})
 	love.graphics.setFont(stg.font)
   love.graphics.setLineStyle('rough')
   love.graphics.setLineWidth(1)
@@ -42,6 +44,7 @@ function love.update()
   if stg.started then
     background.update()
   	player.update()
+    chips.update()
     stage.update()
     level.update()
     explosion.update()
@@ -56,8 +59,8 @@ function love.draw()
 	love.graphics.setCanvas({container, stencil = true})
   if stg.started then
     background.draw()
-    stage.drawBlocks()
     player.draw()
+    chips.draw()
     stage.draw()
     explosion.draw()
     chrome.draw()
@@ -66,8 +69,7 @@ function love.draw()
 	love.graphics.draw(container, 0, 0, 0, stg.scale, stg.scale)
 end
 
-local TICK_RATE = 1 / 60
-local MAX_FRAME_SKIP = 25
+local tickRate = 1 / 60
 
 function love.run()
   if love.load then love.load(love.arg.parseGameArguments(arg), arg) end
@@ -77,14 +79,14 @@ function love.run()
     if love.event then
       love.event.pump()
       for name, a,b,c,d,e,f in love.event.poll() do
-        if name == "quit" then if not love.quit or not love.quit() then return a or 0 end end
+        if name == 'quit' then if not love.quit or not love.quit() then return a or 0 end end
         love.handlers[name](a,b,c,d,e,f)
       end
     end
-    if love.timer then lag = math.min(lag + love.timer.step(), TICK_RATE * MAX_FRAME_SKIP) end
-    while lag >= TICK_RATE do
-      if love.update then love.update(TICK_RATE) end
-      lag = lag - TICK_RATE
+    if love.timer then lag = math.min(lag + love.timer.step(), tickRate * 25) end
+    while lag >= tickRate do
+      if love.update then love.update(tickRate) end
+      lag = lag - tickRate
     end
     if love.graphics and love.graphics.isActive() then
       love.graphics.origin()
