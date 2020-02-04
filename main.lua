@@ -3,6 +3,7 @@ controls = require 'controls'
 sound = require 'sound'
 background = require 'background'
 player = require 'player'
+blocks = require 'blocks'
 chips = require 'chips'
 stage = require 'stage'
 level = require 'level'
@@ -15,6 +16,7 @@ local container
 function loadGame()
   background.load()
 	player.load()
+  blocks.load()
   chips.load()
   stage.load()
   explosion.load()
@@ -44,6 +46,7 @@ function love.update()
   if stg.started then
     background.update()
   	player.update()
+    blocks.update()
     chips.update()
     stage.update()
     level.update()
@@ -60,6 +63,7 @@ function love.draw()
   if stg.started then
     background.draw()
     player.draw()
+    blocks.draw()
     chips.draw()
     stage.draw()
     explosion.draw()
