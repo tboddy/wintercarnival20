@@ -72,13 +72,21 @@ function waveOne()
     spawnSide()
     spawnSide(true)
   end
+  local function doBlocks()
+    for i = 1, 3 do
+      local type = false; if i == 2 then type = 'power' end
+      blocks.spawn({x = 4, y = i - 1})
+      blocks.spawn({x = 5, y = i - 1, type = type})
+      blocks.spawn({x = 6, y = i - 1})
+    end
+  end
   middle()
   sides()
+  doBlocks()
   nextWave = waveTwo
 end
 
 function waveTwo()
-
   local function spawnBullet(enemy)
     stage.spawnBullet(function(bullet)
       bullet.x = enemy.flags.bulletPos.x
@@ -90,7 +98,6 @@ function waveTwo()
     end, function(bullet)
     end)
   end
-
   local function spawnEnemy(mod, opposite)
     stage.spawnEnemy(function(enemy)
       enemy.type = 'fairyblue'
@@ -123,11 +130,24 @@ function waveTwo()
       end
     end)
   end
+  local function doBlocks()
+    for i = 1, 3 do
+      local type = false
+      if i == 3 then type = 'alt' end
+      blocks.spawn({x = 0, y = i - 1})
+      blocks.spawn({x = 1, y = i - 1})
+      blocks.spawn({x = 2, y = i - 1, type = 'alt'})
+      blocks.spawn({x = 4, y = i + 1, type = 'alt'})
+      blocks.spawn({x = 5, y = i + 1})
+      blocks.spawn({x = 6, y = i + 1})
+    end
+    blocks.spawn({x = 3, y = 2, type = 'alt'})
+  end
   for i = 1, 5 do
     spawnEnemy(i - 1)
     spawnEnemy(i - 1, true)
   end
-
+  doBlocks()
   nextWave = waveTwo
 end
 

@@ -74,6 +74,15 @@ local function updateBullet(bullet)
         end
       end
     end
+    for i = 1, #blocks.blockItems do
+      if blocks.blockItems[i].active and blocks.blockItems[i].seen then
+        local rad = blocks.blockSize / 2 - blocks.blockOffset
+        if math.sqrt((blocks.blockItems[i].x + rad - bullet.x) * (blocks.blockItems[i].x + rad - bullet.x) + (blocks.blockItems[i].y + rad - bullet.y) * (blocks.blockItems[i].y + rad - bullet.y)) < rad + size then
+          blocks.blockItems[i].health = blocks.blockItems[i].health - 1
+          kill = true
+        end
+      end
+    end
     if kill then
       explosion.spawn({x = bullet.x, y = bullet.y, type = 'gray'})
       bullet.active = false
