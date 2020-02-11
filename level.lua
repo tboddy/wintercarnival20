@@ -12,7 +12,7 @@ function waveOne()
       stage.spawnEnemy(function(enemy)
         enemy.type = 'fairyred'
         enemy.x = stg.width / 2
-        enemy.y = -(stage.images[enemy.type]:getHeight() / 2 + 16 * yMod)
+        enemy.y = -(stage.images[enemy.type .. 'Center1']:getHeight() / 2 + 16 * yMod)
         enemy.speed = .75
         enemy.angle = math.pi / 2
         enemy.flags.count = 0
@@ -101,7 +101,7 @@ function waveTwo()
   local function spawnEnemy(mod, opposite)
     stage.spawnEnemy(function(enemy)
       enemy.type = 'fairyblue'
-      enemy.x = -stage.images[enemy.type]:getWidth() / 2 - mod * 32
+      enemy.x = -stage.images[enemy.type .. 'Center1']:getWidth() / 2 - mod * 32
       enemy.y = stg.height / 3
       enemy.angle = 0
       enemy.speed = 1.5
@@ -151,7 +151,7 @@ function waveTwo()
   nextWave = waveTwo
 end
 
-local currentWave = waveTwo
+local currentWave = waveOne
 
 local function update()
   if stage.enemyCount == 0 then

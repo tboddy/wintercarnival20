@@ -1,9 +1,14 @@
-local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock
+local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock, enemyAnimateInterval, enemyAnimateMax
 
 local function loadEnemies()
-  local types = {'fairyred', 'fairyblue'}
+  local types = {'fairyred', 'fairyblue', 'fairyyellow', 'fairygreen'}
   for i = 1, 32 do stage.enemies[i] = {} end
-  for i = 1, #types do images[types[i]] = love.graphics.newImage('img/enemies/' .. types[i] .. '.png') end
+  for i = 1, #types do
+    for j = 1, 3 do
+      images[types[i] .. 'Center' .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/center' .. j .. '.png')
+      images[types[i] .. 'Left' .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/left' .. j .. '.png')
+    end
+  end
   images.border1 =  love.graphics.newImage('img/enemies/border1.png')
   stage.images = images
 end
@@ -24,6 +29,8 @@ local function load()
   killBulletLimit = 60
   bulletAnimateInterval = 8
   bulletAnimateMax = bulletAnimateInterval * 4
+  enemyAnimateInterval = 8
+  enemyAnimateMax = enemyAnimateInterval * 4
   images = {}
   bullets = {}
   loadEnemies()
@@ -39,17 +46,20 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.flags = {}
   enemy.opposite = false
   enemy.speed = 0
+  enemy.animateIndex = 1
   enemy.seen = false
   enemy.score = 250
   enemy.hit = false
   enemy.boss = false
   enemy.borderRotation = 0
-  if math.random() < .5 then enemy.xScale = 1 else enemy.xScale = -1 end
   enemy.suicideFunc = false
+  enemy.animateDir = 'Center'
 	initFunc(enemy)
+  enemy.xScale = 1
+  enemy.lastX = enemy.x
   enemy.maxHealth = enemy.health
-  enemy.width = images[enemy.type]:getWidth()
-  enemy.height = images[enemy.type]:getHeight()
+  enemy.width = images[enemy.type .. 'Center1']:getWidth()
+  enemy.height = images[enemy.type .. 'Center1']:getHeight()
 	enemy.updateFunc = updateFunc
 end
 
@@ -64,7 +74,9 @@ local function updateEnemy(enemy)
     explosion.spawn({x = enemy.x, y = enemy.y, big = true, type = 'gray'})
     stg.score = stg.score + enemy.score
     if enemy.suicideFunc then enemy.suicideFunc(enemy)
-    else chips.spawn({x = enemy.x, y = enemy.y}) end
+    else
+      -- chips.spawn({x = enemy.x, y = enemy.y})
+    end
     enemy.active = false
   end
   if enemy.seen and enemy.active then
@@ -72,6 +84,18 @@ local function updateEnemy(enemy)
     enemy.y = enemy.y + math.sin(enemy.angle) * enemy.speed
     if enemy.updateFunc then enemy.updateFunc(enemy) end
     enemy.borderRotation = enemy.borderRotation + .0025
+  	if enemy.clock % enemyAnimateMax < enemyAnimateInterval then enemy.animateIndex = 1
+  	elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 2 then enemy.animateIndex = 2
+    elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 2 and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 3 then enemy.animateIndex = 1
+    elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 3 then enemy.animateIndex = 3 end
+    enemy.animateDir = 'Center'
+    enemy.xScale = 1
+    if enemy.x < enemy.lastX then enemy.animateDir = 'Left'
+    elseif enemy.x > enemy.lastX then
+      enemy.animateDir = 'Left'
+      enemy.xScale = -1
+    end
+    enemy.lastX = enemy.x
     if enemy.x < -enemy.width / 2 or enemy.x > stg.width + enemy.width / 2 or enemy.y < -enemy.height / 2 or enemy.y > stg.height + enemy.height / 2 then enemy.active = false end
     enemy.clock = enemy.clock + 1
   elseif not enemy.seen and enemy.active then
@@ -168,12 +192,11 @@ end
 
 local function drawEnemy(enemy)
   if enemy.boss and enemy.flags.ready then
-    local size = 76
     love.graphics.setColor(enemy.flags.borderColor)
     stg.mask('most', function() love.graphics.draw(images.border1, enemy.x, enemy.y, enemy.borderRotation, 1, 1, images.border1:getWidth() / 2, images.border1:getHeight() / 2) end)
     love.graphics.setColor(stg.colors.white)
   end
-  love.graphics.draw(images[enemy.type], enemy.x, enemy.y, enemy.rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
+  love.graphics.draw(images[enemy.type .. enemy.animateDir .. enemy.animateIndex], enemy.x, enemy.y, enemy.rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
 end
 
 local function drawBullets()

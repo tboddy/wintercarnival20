@@ -1,4 +1,10 @@
+local images
+
 local function load()
+	images = {}
+	local imageFiles = {'point'}
+	for i = 1, #imageFiles do images[imageFiles[i]] = love.graphics.newImage('img/blocks/' .. imageFiles[i] .. '.png') end
+	stg.loadImages(images)
 	for i = 1, 64 do blocks.blockItems[i] = {} end
 end
 
@@ -11,8 +17,9 @@ local function spawn(opts)
 	block.y = opts.y * -blocks.blockSize - blocks.blockSize
 	block.clock = math.floor(math.random() * 4) * 40
 	if opts.type then block.type = opts.type else block.type = false end
-	local mod = .025
+	local mod = math.pi / 50
 	block.rotation = -mod + mod * 2 * math.random()
+	math.randomseed(1419 * math.random())
 end
 
 local function updateBlock(block)
@@ -35,19 +42,29 @@ end
 
 local function drawBlock(block, middle)
 	local offset = blocks.blockOffset
-	if middle then offset = offset + 4 end
+	if middle then offset = offset + 3 end
 	love.graphics.setColor(stg.colors.brownDark)
 	if block.type == 'power' then love.graphics.setColor(stg.colors.redDark)
 	elseif block.type == 'alt' then love.graphics.setColor(stg.colors.brown) end
 	love.graphics.circle('fill', block.x + blocks.blockSize / 2, block.y + blocks.blockSize / 2, blocks.blockSize / 2 - offset)
 end
 
+local function drawTop(block)
+	local img = false
+	local scale = .9
+	if not block.type or block.type == 'alt' then
+		img = images.point
+		love.graphics.setColor(stg.colors.brown)
+		if block.type == 'alt' then love.graphics.setColor(stg.colors.brownLight) end
+	end
+	if img then love.graphics.draw(img, block.x + blocks.blockSize / 2, block.y + blocks.blockSize / 2, block.rotation, scale, scale, img:getWidth() / 2, img:getHeight() / 2) end
+end
+
 local function draw()
-	stg.mask('quarter', function()
-		for i = 1, #blocks.blockItems do if blocks.blockItems[i].active then drawBlock(blocks.blockItems[i]) end end
-	end)
+	stg.mask('quarter', function() for i = 1, #blocks.blockItems do if blocks.blockItems[i].active then drawBlock(blocks.blockItems[i]) end end end)
 	stg.mask('half', function()
 		for i = 1, #blocks.blockItems do if blocks.blockItems[i].active then drawBlock(blocks.blockItems[i], true) end end
+		for i = 1, #blocks.blockItems do if blocks.blockItems[i].active then drawTop(blocks.blockItems[i]) end end
 	end)
 	love.graphics.setColor(stg.colors.white)
 end
