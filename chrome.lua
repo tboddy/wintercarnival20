@@ -87,7 +87,7 @@ end
 
 local function draw()
   drawFrame()
-  drawEvade()
+  -- drawEvade()
   if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
   drawSidebar()
   local fps = math.floor(love.timer.getFPS() / 60 * 10)

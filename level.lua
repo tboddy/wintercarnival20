@@ -74,10 +74,16 @@ function waveOne()
   end
   local function doBlocks()
     for i = 1, 3 do
-      local type = false; if i == 2 then type = 'power' end
-      blocks.spawn({x = 4, y = i - 1})
-      blocks.spawn({x = 5, y = i - 1, type = type})
-      blocks.spawn({x = 6, y = i - 1})
+      if i ~= 2 then
+        local aType = false
+        local bType = 'alt'
+        if i == 1 then
+          aType = 'alt'
+          bType = false
+        end
+        blocks.spawn({x = 4, y = i - 1, type = aType})
+        blocks.spawn({x = 6, y = i - 1, type = bType})
+      else blocks.spawn({x = 5, y = i - 1, type = 'power'}) end
     end
   end
   middle()
@@ -87,66 +93,148 @@ function waveOne()
 end
 
 function waveTwo()
-  local function spawnBullet(enemy)
-    stage.spawnBullet(function(bullet)
-      bullet.x = enemy.flags.bulletPos.x
-      bullet.y = enemy.flags.bulletPos.y
-      local mod = math.pi / 60
-      bullet.angle = enemy.flags.bulletAngle - mod / 2 + math.random() * mod
-      bullet.speed = 3
-      bullet.type = 'bigRed'
-    end, function(bullet)
-    end)
-  end
-  local function spawnEnemy(mod, opposite)
-    stage.spawnEnemy(function(enemy)
-      enemy.type = 'fairyblue'
-      enemy.x = -stage.images[enemy.type .. 'Center1']:getWidth() / 2 - mod * 32
-      enemy.y = stg.height / 3
-      enemy.angle = 0
-      enemy.speed = 1.5
-      enemy.flags.initial = enemy.x
-      enemy.flags.angleMod = .035
-      if opposite then
-        enemy.x = enemy.x * -1 + stg.width * 1.25
-        enemy.y = enemy.y - stg.grid * 3.5
-        enemy.angle = math.pi
-        enemy.flags.angleMod = enemy.flags.angleMod * -1
+  local function sides()
+    local function spawnBullets(enemy)
+      local function spawnBullet()
+        stage.spawnBullet(function(bullet)
+          bullet.x = enemy.x
+          bullet.y = enemy.y
+          local mod = math.pi / 8
+          local speedMod = math.random() * .5
+          bullet.angle = stg.getAngle(enemy, player) - mod + mod * 2 * math.random()
+          bullet.speed = 2.5 + speedMod
+          bullet.flags.speedLimit = bullet.speed - 1
+          bullet.type = 'bigRed'; if enemy.flags.opposite then bullet.type = 'big' end
+          if math.random() < .5 then bullet.type = 'smallRed'; if enemy.flags.opposite then bullet.type = 'small' end end
+        end, function(bullet)
+          stg.slowEntity(bullet, bullet.flags.speedLimit, .015)
+        end)
       end
-    end, function(enemy)
-      local mod = (stg.height / 2 - enemy.y) / 120
-      -- enemy.x = enemy.x + mod
-      local interval = 30
-      local max = interval * 2.25
-      if enemy.clock >= interval and enemy.clock <= max and enemy.clock % 5 == 0 then
-        enemy.angle = enemy.angle + enemy.flags.angleMod
-        if not enemy.flags.bulletStart then enemy.flags.bulletStart = 0 end
-        if enemy.flags.bulletStart % 4 == 0 then
-          enemy.flags.bulletAngle = stg.getAngle(enemy, player)
-          enemy.flags.bulletPos = {x = enemy.x, y = enemy.y}
+      for i = 1, 3 do spawnBullet() end
+    end
+    local function spawnEnemy(mod, opposite)
+      stage.spawnEnemy(function(enemy)
+        enemy.type = 'fairyblue'
+        enemy.x = -stage.images[enemy.type .. 'Center1']:getWidth() / 2 - mod * 32
+        enemy.y = stg.height / 3
+        enemy.angle = 0
+        enemy.flags.speed = 1.75
+        enemy.flags.speedMod = .02
+        enemy.flags.speedLimit = .65
+        enemy.speed = enemy.flags.speed
+        enemy.flags.initial = enemy.x
+        enemy.flags.angleMod = .002
+        if opposite then
+          enemy.x = enemy.x * -1 + stg.width * 1.25
+          enemy.y = enemy.y - stg.grid * 3.5
+          enemy.angle = math.pi
+          enemy.flags.angleMod = enemy.flags.angleMod * -1
+          enemy.type = 'fairyyellow'
+          enemy.flags.opposite = true
         end
-        spawnBullet(enemy)
-        enemy.flags.bulletStart = enemy.flags.bulletStart + 1
+      end, function(enemy)
+        if enemy.flipped then
+          enemy.speed = enemy.flags.speed
+          enemy.flipped = false
+          if enemy.clock < 60 * 3 then spawnBullets(enemy) end
+        else
+          enemy.speed = enemy.speed - enemy.flags.speedMod
+          if enemy.speed <= enemy.flags.speedLimit then 
+            enemy.flipped = true
+            enemy.speed = enemy.flags.speedLimit
+          end
+        end
+        enemy.angle = enemy.angle + enemy.flags.angleMod
+      end)
+    end
+    for i = 1, 4 do
+      spawnEnemy(i - 1)
+      spawnEnemy(i - 1, true)
+    end
+  end
+  local function top()
+    local function spawnBullets(enemy)
+      local function ring()
+        local count = 6
+        local mod = math.pi / 9
+        local angle = stg.getAngle(enemy, player) - mod * 2.5
+        for i = 1, count do
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.angle = angle
+            bullet.type = 'bolt'
+            bullet.speed = 2.5
+          end, function(bullet)
+            stg.slowEntity(bullet, 2, .015)
+          end)
+          angle = angle + mod
+        end
       end
-    end)
+      local function bolt()
+        local function spawnBullet()
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            local mod = math.pi / 15
+            local speedMod = math.random() * .75
+            bullet.angle = stg.getAngle(enemy, player) - mod + mod * 2 * math.random()
+            bullet.speed = 2.5 + speedMod
+            bullet.flags.speedLimit = bullet.speed - 1
+            bullet.type = 'bigRed'; if math.random() < .5 then bullet.type = 'smallRed' end
+          end, function(bullet)
+            stg.slowEntity(bullet, bullet.flags.speedLimit, .015)
+          end)
+        end
+        for i = 1, 6 do spawnBullet() end
+      end
+      ring()
+      bolt()
+    end
+    local function spawnEnemy(mod, opposite)
+      local yOffset = stg.grid * 15
+      stage.spawnEnemy(function(enemy)
+        enemy.type = 'fairyblue'
+        local xMod = stg.grid
+        enemy.x = stg.width / 3 - xMod + xMod * 2 * math.random()
+        enemy.y = -stage.images[enemy.type .. 'Center1']:getHeight() / 2 - mod * 30 - yOffset
+        enemy.speed = 2
+        if opposite then
+          enemy.x = stg.width / 3 * 2 - xMod + xMod * 2 * math.random()
+          enemy.y = enemy.y - stg.grid * 6
+          enemy.type = 'fairyred'
+        end
+        enemy.angle = stg.getAngle(enemy, {x = stg.width / 2, y = stg.height})
+        enemy.flags.index = mod
+      end, function(enemy)
+        stg.slowEntity(enemy, 1, .02)
+        if enemy.flags.index == 1 and enemy.clock == 15 then spawnBullets(enemy) end
+      end)
+    end
+    for i = 1, 4 do
+      spawnEnemy(i - 1)
+      spawnEnemy(i - 1, true)
+    end
   end
   local function doBlocks()
     for i = 1, 3 do
       local type = false
-      if i == 3 then type = 'alt' end
-      blocks.spawn({x = 0, y = i - 1})
-      blocks.spawn({x = 1, y = i - 1})
-      blocks.spawn({x = 2, y = i - 1, type = 'alt'})
-      blocks.spawn({x = 4, y = i + 1, type = 'alt'})
-      blocks.spawn({x = 5, y = i + 1})
-      blocks.spawn({x = 6, y = i + 1})
+      if i == 2 then
+        blocks.spawn({x = 1, y = i - 1})
+        blocks.spawn({x = 5, y = i + 1})
+      else
+        blocks.spawn({x = 0, y = i - 1})
+        blocks.spawn({x = 2, y = i - 1, type = 'alt'})
+        blocks.spawn({x = 4, y = i + 1, type = 'alt'})
+        blocks.spawn({x = 6, y = i + 1})
+      end
     end
-    blocks.spawn({x = 3, y = 2, type = 'alt'})
+    blocks.spawn({x = 0, y = 6})
+    blocks.spawn({x = 3, y = 6, type = 'power'})
+    blocks.spawn({x = 6, y = 6})
   end
-  for i = 1, 5 do
-    spawnEnemy(i - 1)
-    spawnEnemy(i - 1, true)
-  end
+  sides()
+  top()
   doBlocks()
   nextWave = waveTwo
 end

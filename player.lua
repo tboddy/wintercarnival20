@@ -1,4 +1,4 @@
-local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeight, bulletSpeed, bullets, hitboxSize, invulnerableLimit, clock, canShoot, shotClock, lives, invulnerableClock, power
+local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeight, bulletSpeed, bullets, hitboxSize, invulnerableLimit, clock, canShoot, shotClock, lives, invulnerableClock
 
 local function loadImages()
   images = {}
@@ -28,7 +28,6 @@ local function load()
   shotClock = 0
   lives = 2
   invulnerableClock = 0
-  power = 0
 end
 
 local function updateMove()
@@ -103,8 +102,10 @@ local function updateShot()
 		if shotClock % interval == 0 and shotClock < limit then
       sound.sfx = 'playerbullet'
       spawnBullet({mod = 0})
-      -- spawnBullet({mod = 1})
-      -- spawnBullet({mod = -1})
+      if player.power >= 1 then
+        spawnBullet({mod = 1})
+        spawnBullet({mod = -1})
+      end
     end
 		shotClock = shotClock + 1
   end
@@ -153,7 +154,7 @@ local function drawPlayer()
   if invulnerableClock % interval < interval / 2 then canDraw = true end
   if canDraw then
     love.graphics.draw(images.idle, x, y, 0, 1, 1, width / 2, height / 2)
-    stg.mask('half', function() love.graphics.draw(images['idle-top'], x, y, 0, 1, 1, width / 2, height / 2) end)
+    -- stg.mask('half', function() love.graphics.draw(images['idle-top'], x, y, 0, 1, 1, width / 2, height / 2) end)
     if controls.focus() then love.graphics.draw(images.hitbox, x, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2) end
   end
 end
@@ -179,5 +180,6 @@ return {
   hit = false,
   invulnerableClock = 0,
   getHit = getHit,
-  lives = 0
+  lives = 0,
+  power = 0
 }

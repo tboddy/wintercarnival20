@@ -2,7 +2,7 @@ local images
 
 local function load()
 	images = {}
-	local imageFiles = {'point'}
+	local imageFiles = {'point', 'sake'}
 	for i = 1, #imageFiles do images[imageFiles[i]] = love.graphics.newImage('img/blocks/' .. imageFiles[i] .. '.png') end
 	stg.loadImages(images)
 	for i = 1, 64 do blocks.blockItems[i] = {} end
@@ -18,6 +18,9 @@ local function spawn(opts)
 	block.clock = math.floor(math.random() * 4) * 40
 	if opts.type then block.type = opts.type else block.type = false end
 	local mod = math.pi / 50
+	if block.type == 'power' then
+		mod = math.pi / 4
+	end
 	block.rotation = -mod + mod * 2 * math.random()
 	math.randomseed(1419 * math.random())
 end
@@ -25,7 +28,9 @@ end
 local function updateBlock(block)
   if block.health <= 0 then
     explosion.spawn({x = block.x + 16, y = block.y + 16, big = true, type = 'gray'})
-    -- if block.type == 'power' then spawnChip({x = block.x + 16, y = block.y + 16}) end
+    if block.type == 'power' then
+    	chips.spawn({x = block.x + 16, y = block.y + 16})
+    end
     block.active = false
     stg.score = stg.score + 100
   elseif block.active then
@@ -41,12 +46,13 @@ local function update()
 end
 
 local function drawBlock(block, middle)
-	local offset = blocks.blockOffset
-	if middle then offset = offset + 3 end
-	love.graphics.setColor(stg.colors.brownDark)
-	if block.type == 'power' then love.graphics.setColor(stg.colors.redDark)
-	elseif block.type == 'alt' then love.graphics.setColor(stg.colors.brown) end
-	love.graphics.circle('fill', block.x + blocks.blockSize / 2, block.y + blocks.blockSize / 2, blocks.blockSize / 2 - offset)
+	if block.type ~= 'power' then
+		local offset = blocks.blockOffset
+		if middle then offset = offset + 3 end
+		love.graphics.setColor(stg.colors.brownDark)
+		if block.type == 'alt' then love.graphics.setColor(stg.colors.brown) end
+		love.graphics.circle('fill', block.x + blocks.blockSize / 2, block.y + blocks.blockSize / 2, blocks.blockSize / 2 - offset)
+	end
 end
 
 local function drawTop(block)
@@ -56,6 +62,10 @@ local function drawTop(block)
 		img = images.point
 		love.graphics.setColor(stg.colors.brown)
 		if block.type == 'alt' then love.graphics.setColor(stg.colors.brownLight) end
+	elseif block.type == 'power' then
+		img = images.sake
+		love.graphics.setColor(stg.colors.white)
+		scale = 1.25
 	end
 	if img then love.graphics.draw(img, block.x + blocks.blockSize / 2, block.y + blocks.blockSize / 2, block.rotation, scale, scale, img:getWidth() / 2, img:getHeight() / 2) end
 end

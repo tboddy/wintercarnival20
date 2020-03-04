@@ -33,6 +33,7 @@ local function updateChip(chip)
     if math.sqrt(dx * dx + dy * dy) < 10 + chipSize / 2 then
       chip.active = false
       stg.score = stg.score + 1500
+      player.power = player.power + 1
     end
   else
     if chip.y >= stg.height + chipSize / 2 then chip.active = false

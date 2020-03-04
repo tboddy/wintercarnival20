@@ -20,6 +20,7 @@ local function loadBullets()
     for j = 0, 3 do
       images[types[i] .. j] = love.graphics.newImage('img/bullets/' .. types[i] .. j .. '.png')
       images[types[i] .. 'Red' .. j] = love.graphics.newImage('img/bullets/' .. types[i] .. '-red' .. j .. '.png')
+      -- images[types[i] .. j] = love.graphics.newImage('img/bullets/' .. types[i] .. '-red' .. j .. '.png')
     end
   end
 end
