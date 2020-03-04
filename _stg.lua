@@ -80,8 +80,7 @@ end
 
 return {
   scale = 3,
-  winWidth = 320,
-  width = 240,
+  width = 320,
   height = 240,
   loaded = false,
   started = true,

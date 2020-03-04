@@ -11,7 +11,7 @@ local function load()
 	stg.loadImages(images)
 	zoom = 128
 	angle = -math.pi / 2
-	speed = 6
+	speed = 10
 	bottomStep = 0
 	bottomMeshes = {}
 	local fov = .1
