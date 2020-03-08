@@ -170,7 +170,15 @@ local function updateBullet(bullet)
   elseif bullet.clock % bulletAnimateMax >= bulletAnimateInterval * 3 then bullet.animateIndex = 3 end
 	if string.find(bullet.type, 'bolt') or string.find(bullet.type, 'arrow') or string.find(bullet.type, 'pill') then bullet.rotation = bullet.angle end
 	bullet.clock = bullet.clock + 1
-	if bullet.x < -bullet.width * 2 or bullet.x > stg.width + bullet.width * 2 or bullet.y < -bullet.height * 2 or bullet.y > stg.height + bullet.height * 2 then bullet.active = false
+  -- if bullet.x < -bullet.width * 2
+  --   or bullet.x > stg.width + bullet.width * 2
+  --   or bullet.y < -bullet.height * 2
+  --   or bullet.y > stg.height + bullet.height * 2 then bullet.active = false
+  local offset = stg.grid * 5
+  if bullet.x < -offset
+    or bullet.x > stg.width + offset
+    or bullet.y < -offset
+    or bullet.y > stg.height + offset then bullet.active = false
 	elseif killBulletClock > 0 then
     if string.find(bullet.type, 'Red') then explosion.spawn({x = bullet.x, y = bullet.y, type = 'red'}) else explosion.spawn({x = bullet.x, y = bullet.y}) end
 		bullet.active = false

@@ -22,6 +22,7 @@ local function spawn(opts)
     exp.current = 0
     exp.clock = 0
     if opts.type then exp.type = opts.type else exp.type = 'blue' end
+    if opts.shadow then exp.shadow = true else exp.shadow = false end
     if opts.big then
       exp.xScale = 2
       exp.yScale = 2
@@ -49,6 +50,22 @@ local function update()
 end
 
 local function drawExplosion(exp)
+  if exp.shadow then
+    local sSize = size
+    if exp.current == 0 then sSize = size / 2
+    elseif exp.current == 1 or exp.current == 3 then sSize = size / 4 * 3
+    elseif exp.current == 4 then sSize = size / 4 end
+    if exp.type == 'red' then love.graphics.setColor(stg.colors.redLight)
+    else love.graphics.setColor(stg.colors.blueLight) end
+    stg.mask('quarter', function()
+      love.graphics.circle('fill', exp.x, exp.y, sSize / 4 * 3)
+    end)
+    -- love.graphics.setColor(stg.colors.offWhite)
+    stg.mask('half', function()
+      love.graphics.circle('fill', exp.x, exp.y, sSize / 2)
+    end)
+    love.graphics.setColor(stg.colors.white)
+  end
   love.graphics.draw(images[exp.type][exp.current], exp.x, exp.y, 0, exp.xScale, exp.yScale, size / 2, size / 2)
 end
 

@@ -1,9 +1,10 @@
-local images, barOffset, barHeight, evadeMax, evadeWidth, bossMax, bossWidth, bossX
+local images, barOffset, barHeight, evadeMax, evadeWidth, bossMax, bossWidth, bossX, barY
 
 local function load()
   images = {
     heart = love.graphics.newImage('img/chrome/heart.png'),
-    heartShadow = love.graphics.newImage('img/chrome/heart-shadow.png')
+    heartShadow = love.graphics.newImage('img/chrome/heart-shadow.png'),
+    frame = love.graphics.newImage('img/chrome/frame.png')
   }
 	stg.loadImages(images)
   barOffset = 4
@@ -52,13 +53,51 @@ local function drawBoss()
 end
 
 local function drawScore()
-  drawLabel({input = 'Score ' .. stg.processScore(stg.score), x = 4, y = 4})
-  drawLabel({input = 'Hi Score ' .. stg.processScore(stg.score), x = 0, y = 4, align = {type = 'right', width = stg.width - 4}})
+  -- drawLabel({input = 'Score ' .. stg.processScore(stg.score), x = 4, y = 4})
+  local x = stg.width + 8
+  local mod = 10
+  drawLabel({input = 'Hi-Score', x = x, y = barY})
+  barY = barY + mod
+  drawLabel({input = stg.processScore(stg.score), x = x, y = barY})
+  barY = barY + stg.grid
+  drawLabel({input = 'Score', x = x, y = barY})
+  barY = barY + mod
+  drawLabel({input = stg.processScore(stg.score), x = x, y = barY})
+end
+
+local function drawFrame()
+  love.graphics.draw(images.frame, stg.width, 0)
+  love.graphics.setColor(stg.colors.black)
+  stg.mask('half', function() love.graphics.rectangle('fill', stg.width - 1, 0, 1, stg.height) end)
+  love.graphics.setColor(stg.colors.purple)
+  love.graphics.rectangle('fill', stg.width, 0, 1, stg.height)
+  love.graphics.setColor(stg.colors.white)
+end
+
+local function drawPlayer()
+  local x = stg.width + 8
+  local mod = 10
+  barY = barY + stg.grid
+  drawLabel({input = 'Left  x3', x = x, y = barY})
+  barY = barY + mod
+  drawLabel({input = 'Graze  0', x = x, y = barY})
+  barY = barY + stg.grid
+  drawLabel({input = 'Power', x = x, y = barY})
+end
+
+local function drawFps()
+  local fps = math.floor(love.timer.getFPS() / 60 * 10)
+  if fps > 61 or fps < 57 then fps = 60 end
+  drawLabel({input = fps .. 'fps', y = stg.height - 8 - 3, align = {type = 'right', width = stg.winWidth - 4}})
 end
 
 local function draw()
+  barY = stg.grid
   if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
+  drawFrame()
   drawScore()
+  drawPlayer()
+  drawFps()
 end
 
 return {
@@ -89,6 +128,3 @@ return {
 -- end
 
 -- drawSidebar()
--- local fps = math.floor(love.timer.getFPS() / 60 * 10)
--- if fps > 61 or fps < 57 then fps = 60 end
--- drawLabel({input = fps .. ' fps', y = stg.height - barOffset * 2 - 8, align = {type = 'right', width = stg.width - barOffset * 2}})
