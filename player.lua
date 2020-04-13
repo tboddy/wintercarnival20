@@ -1,20 +1,20 @@
-local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeight, bulletSpeed, bullets, hitboxSize, invulnerableLimit, clock, canShoot, shotClock, lives, invulnerableClock
+local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeight, bulletSpeed, bullets, hitboxSize, invulnerableLimit, clock, canShoot, shotClock, lives, invulnerableClock, borderCurrent
 
 local function loadImages()
   images = {}
-  local imageFiles = {'idle', 'idle-top', 'hitbox', 'bullet-double', 'bullet-single', 'border'}
+  local imageFiles = {'idle1', 'idle2', 'hitbox', 'bullet-double', 'bullet-single', 'border'}
   for i = 1, #imageFiles do images[imageFiles[i]] = love.graphics.newImage('img/player/' .. imageFiles[i] .. '.png') end
   stg.loadImages(images)
 end
 
 local function load()
   loadImages()
-  initX = stg.width / 2
-  initY = stg.height - stg.grid * 2
+  initX = stg.grid * 2.5
+  initY = stg.height / 2
   x = initX
   y = initY
-  width = images.idle:getWidth()
-  height = images.idle:getHeight()
+  width = images.idle1:getWidth()
+  height = images.idle1:getHeight()
   bulletWidth = 28
   bulletHeight = 8
   bulletSpeed = 28
@@ -28,6 +28,7 @@ local function load()
   shotClock = 0
   lives = 2
   invulnerableClock = 0
+  borderCurrent = 0
 end
 
 local function updateMove()
@@ -48,13 +49,13 @@ local function spawnBullet(opts)
   local bullet = bullets[stg.getIndex(bullets)]
   local offset = 4
 	bullet.active = true
-	bullet.angle = diff * opts.mod - math.pi / 2
+	bullet.angle = diff * opts.mod
   if opts.double then bullet.double = true else bullet.double = false end
 	bullet.x = x + math.cos(bullet.angle) * offset
 	bullet.y = y + math.sin(bullet.angle) * offset
   local size = bulletHeight / 2; if bullet.double then size = size * 2 end
-  -- local drunk = .025
-  -- bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
+  local drunk = .025
+  bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
 end
 
 local function updateBullet(bullet)
@@ -69,15 +70,6 @@ local function updateBullet(bullet)
       if stage.enemies[i].active and stage.enemies[i].seen then
         if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + size then
           stage.enemies[i].health = stage.enemies[i].health - 1
-          kill = true
-        end
-      end
-    end
-    for i = 1, #blocks.blockItems do
-      if blocks.blockItems[i].active and blocks.blockItems[i].seen then
-        local rad = blocks.blockSize / 2 - blocks.blockOffset
-        if math.sqrt((blocks.blockItems[i].x + rad - bullet.x) * (blocks.blockItems[i].x + rad - bullet.x) + (blocks.blockItems[i].y + rad - bullet.y) * (blocks.blockItems[i].y + rad - bullet.y)) < rad + size then
-          blocks.blockItems[i].health = blocks.blockItems[i].health - 1
           kill = true
         end
       end
@@ -133,9 +125,18 @@ local function getHit(bullet)
   end
 end
 
+local function updateBorderSize()
+  if controls.focus() then
+    local mod = 4
+    if borderCurrent < borderSize / 2 - mod then borderCurrent = borderCurrent + mod
+    elseif borderCurrent ~= borderSize / 2 then borderCurrent = borderSize / 2 end
+  elseif borderCurrent ~= 0 then borderCurrent = 0 end
+end
+
 local function update()
   if not stg.gameOver and invulnerableClock < invulnerableLimit - 20 then updateMove() end
   updateShot()
+  updateBorderSize()
   if invulnerableClock > 0 then invulnerableClock = invulnerableClock - 1 end
   clock = clock + 1
   player.invulnerableClock = invulnerableClock
@@ -148,26 +149,37 @@ local function drawBullet(bullet)
   love.graphics.draw(img, bullet.x, bullet.y, bullet.angle, 1, 1, bulletWidth / 2, size / 2)
 end
 
+local function animateImage(shadow)
+  local interval = 30
+  local img = 'idle1'
+  if clock % interval >= interval / 2 then img = 'idle2' end
+  return images[img]
+end
+
 local function drawPlayer()
   local canDraw = false
   local interval = 30
   if invulnerableClock % interval < interval / 2 then canDraw = true end
   if canDraw then
-    love.graphics.draw(images.idle, x, y, 0, 1, 1, width / 2, height / 2)
-    -- stg.mask('half', function() love.graphics.draw(images['idle-top'], x, y, 0, 1, 1, width / 2, height / 2) end)
+    if controls.focus() then
+      local borderWidth = 6
+      love.graphics.setLineWidth(borderWidth)
+      love.graphics.setColor(stg.colors.brownDark)
+      stg.mask('quarter', function() love.graphics.circle('line', x - 1, y + 1, borderCurrent - borderWidth * 1.5) end)
+      stg.mask('half', function() love.graphics.circle('line', x - 1, y + 1, borderCurrent - borderWidth / 2) end)
+      love.graphics.setLineWidth(1)
+      love.graphics.circle('line', x - 1, y + 1, borderCurrent - borderWidth / 2 + 3)
+      love.graphics.setColor(stg.colors.white)
+    end
+
+    love.graphics.draw(animateImage(), x - 1, y + 1, 0, 1, 1, width / 2, height / 2)
     if controls.focus() then love.graphics.draw(images.hitbox, x, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2) end
   end
 end
 
 local function draw()
-  -- if controls.focus() then
-  --   love.graphics.setColor(stg.colors.red)
-  --   love.graphics.draw(images.border, x - 1, y, 0, 1, 1, borderSize / 2, borderSize / 2)
-  --   love.graphics.setColor(stg.colors.white)
-  -- end
-  stg.mask('half', function() for i = 1, #bullets do if bullets[i].active then drawBullet(bullets[i]) end end end)
-
   drawPlayer()
+  stg.mask('half', function() for i = 1, #bullets do if bullets[i].active then drawBullet(bullets[i]) end end end)
 end
 
 return {

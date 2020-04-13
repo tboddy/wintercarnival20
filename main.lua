@@ -3,7 +3,6 @@ controls = require 'controls'
 sound = require 'sound'
 background = require 'background'
 player = require 'player'
-blocks = require 'blocks'
 chips = require 'chips'
 stage = require 'stage'
 level = require 'level'
@@ -16,7 +15,6 @@ local container
 function loadGame()
   background.load()
 	player.load()
-  blocks.load()
   chips.load()
   stage.load()
   explosion.load()
@@ -27,10 +25,10 @@ end
 
 function love.load()
 	math.randomseed(1419)
-  love.window.setTitle('psychedelic nightmare')
-	container = love.graphics.newCanvas(stg.winWidth, stg.height)
+  love.window.setTitle('ALCOHOLIC HUNCH')
+	container = love.graphics.newCanvas(stg.width, stg.height)
 	container:setFilter('nearest', 'nearest')
-	love.window.setMode(stg.winWidth * stg.scale, stg.height * stg.scale, {vsync = false})
+	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
 	love.graphics.setFont(stg.font)
   love.graphics.setLineStyle('rough')
   love.graphics.setLineWidth(1)
@@ -46,7 +44,6 @@ function love.update()
   if stg.started then
     background.update()
   	player.update()
-    blocks.update()
     chips.update()
     stage.update()
     level.update()
@@ -62,7 +59,6 @@ function love.draw()
 	love.graphics.setCanvas({container, stencil = true})
   if stg.started then
     background.draw()
-    blocks.draw()
     player.draw()
     chips.draw()
     stage.draw()

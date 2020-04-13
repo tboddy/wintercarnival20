@@ -43,6 +43,10 @@ local function getAngle(a, b)
   return math.atan2(b.y - a.y, b.x - a.x)
 end
 
+local function getDistance(a, b)
+  return  math.sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y))
+end
+
 local function getIndex(arr)
   local index = 1
   local found = false
@@ -64,7 +68,7 @@ local masks = {
   half = love.graphics.newImage('img/masks/half.png'),
   quarter = love.graphics.newImage('img/masks/quarter.png'),
   most = love.graphics.newImage('img/masks/most.png'),
-	fade = love.graphics.newImage('img/masks/fade.png')
+  fade = love.graphics.newImage('img/masks/fade.png')
 }
 local maskShader = love.graphics.newShader([[vec4 effect(vec4 color, Image texture, vec2 texture_coords, vec2 screen_coords){ if(Texel(texture, texture_coords).rgb == vec3(0.0)) {discard;} return vec4(1.0); }]])
 local function doMask(mask, callback)
@@ -80,23 +84,25 @@ end
 
 return {
   scale = 3,
-  width = 240,
+  width = 320,
   height = 240,
-  winWidth = 320,
   loaded = false,
   started = true,
   clock = 0,
   colors = colors(),
   processScore = processScore,
   getAngle = getAngle,
+  getDistance = getDistance,
   getIndex = getIndex,
   limit = 1 / 60,
   score = 0,
   grid = 16,
   highScore = 0,
   slowEntity = slowEntity,
+  maskShader = maskShader,
   mask = doMask,
-  font = love.graphics.newFont('fonts/Ibara.ttf', 7),
+  font = love.graphics.newFont('fonts/Gold Box 8x8 Monospaced.ttf', 8),
+  fontBig = love.graphics.newFont('fonts/Gold Box 8x16 Monospaced.ttf', 13),
   loadImages = loadImages,
   timeLimit = 60 * 2
 }

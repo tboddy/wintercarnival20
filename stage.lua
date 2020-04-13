@@ -1,12 +1,13 @@
 local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock, enemyAnimateInterval, enemyAnimateMax
 
 local function loadEnemies()
-  local types = {'fairyred', 'fairyblue', 'fairyyellow', 'fairygreen'}
+  local types = {'fairyred', 'fairyblue', 'fairyyellow', 'fairygreen', 'yukari', 'mima'}
   for i = 1, 32 do stage.enemies[i] = {} end
   for i = 1, #types do
     for j = 1, 3 do
-      images[types[i] .. 'Center' .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/center' .. j .. '.png')
-      images[types[i] .. 'Left' .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/left' .. j .. '.png')
+      if types[i] == 'yukari' or types[i] == 'mima' then
+        images[types[i] .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/1.png')
+      else images[types[i] .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/' .. j .. '.png') end
     end
   end
   images.border1 =  love.graphics.newImage('img/enemies/border1.png')
@@ -30,7 +31,7 @@ local function load()
   killBulletLimit = 60
   bulletAnimateInterval = 8
   bulletAnimateMax = bulletAnimateInterval * 4
-  enemyAnimateInterval = 8
+  enemyAnimateInterval = 15
   enemyAnimateMax = enemyAnimateInterval * 4
   images = {}
   bullets = {}
@@ -54,13 +55,11 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.boss = false
   enemy.borderRotation = 0
   enemy.suicideFunc = false
-  enemy.animateDir = 'Center'
 	initFunc(enemy)
   enemy.xScale = 1
-  enemy.lastX = enemy.x
   enemy.maxHealth = enemy.health
-  enemy.width = images[enemy.type .. 'Center1']:getWidth()
-  enemy.height = images[enemy.type .. 'Center1']:getHeight()
+  enemy.width = images[enemy.type .. '1']:getWidth()
+  enemy.height = images[enemy.type .. '1']:getHeight()
 	enemy.updateFunc = updateFunc
 end
 
@@ -85,18 +84,11 @@ local function updateEnemy(enemy)
     enemy.y = enemy.y + math.sin(enemy.angle) * enemy.speed
     if enemy.updateFunc then enemy.updateFunc(enemy) end
     enemy.borderRotation = enemy.borderRotation + .0025
-  	if enemy.clock % enemyAnimateMax < enemyAnimateInterval then enemy.animateIndex = 1
-  	elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 2 then enemy.animateIndex = 2
-    elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 2 and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 3 then enemy.animateIndex = 1
-    elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 3 then enemy.animateIndex = 3 end
-    enemy.animateDir = 'Center'
+  	if enemy.clock % enemyAnimateMax < enemyAnimateInterval then enemy.animateIndex = 3
+  	elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 2 then enemy.animateIndex = 1
+    elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 2 and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 3 then enemy.animateIndex = 3
+    elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 3 then enemy.animateIndex = 2 end
     enemy.xScale = 1
-    if enemy.x < enemy.lastX then enemy.animateDir = 'Left'
-    elseif enemy.x > enemy.lastX then
-      enemy.animateDir = 'Left'
-      enemy.xScale = -1
-    end
-    enemy.lastX = enemy.x
     if enemy.x < -enemy.width / 2 or enemy.x > stg.width + enemy.width / 2 or enemy.y < -enemy.height / 2 or enemy.y > stg.height + enemy.height / 2 then enemy.active = false end
     enemy.clock = enemy.clock + 1
   elseif not enemy.seen and enemy.active then
@@ -111,31 +103,22 @@ local function updateEnemy(enemy)
   end
 end
 
-local function setupMoveBoss(enemy)
-  if enemy.speed <= 0 and not enemy.flags.ready then
-    enemy.clock = -1
-    enemy.flags.moveAngles = {
-      math.pi / 10,
-      math.pi / 10 * 11,
-      math.pi / 10 * 9,
-      math.pi / 10 * 19
-    }
-    enemy.flags.currentMoveAngle = 1
-    enemy.flags.ready = true
-  end
+local function placeEnemy(enemy)
+  local yOffset = stg.grid * 2.5
+  local xOffset = stg.grid * 1.5
+  local xLimit = stg.grid * 4
+  enemy.flags.moveX = (stg.width - xOffset - xLimit) + xLimit * math.random()
+  enemy.flags.moveY = yOffset + (stg.height - yOffset * 2) * math.random()
+  enemy.flags.moveTarget = {x = enemy.flags.moveX, y = enemy.flags.moveY}
+  local distance = stg.getDistance(enemy, enemy.flags.moveTarget)
+  if(distance < stg.grid * 5 or distance > stg.grid * 6) then placeEnemy(enemy)
+  else enemy.flags.moveAngle = stg.getAngle(enemy, enemy.flags.moveTarget) end
 end
 
-local function moveBoss(enemy, patternInterval, patternLimit)
-  if enemy.clock % patternInterval >= patternLimit then
-    if enemy.clock % patternInterval == patternLimit then enemy.speed = 5
-      enemy.angle = enemy.flags.moveAngles[enemy.flags.currentMoveAngle]
-      enemy.speed = 2
-    end
-  else enemy.speed = 0 end
-  if enemy.clock % patternInterval == patternLimit and enemy.clock > 0 then
-    enemy.flags.currentMoveAngle = enemy.flags.currentMoveAngle + 1
-    if enemy.flags.currentMoveAngle > #enemy.flags.moveAngles then enemy.flags.currentMoveAngle = 1 end
-  end
+local function moveEnemy(enemy)
+  local speed = stg.getDistance(enemy, enemy.flags.moveTarget) / 20
+  enemy.x = enemy.x + math.cos(enemy.flags.moveAngle) * speed
+  enemy.y = enemy.y + math.sin(enemy.flags.moveAngle) * speed 
 end
 
 local function spawnBullet(initFunc, updateFunc)
@@ -199,13 +182,27 @@ local function update()
   stage.killBulletClock = killBulletClock
 end
 
-local function drawEnemy(enemy)
+local function drawShadow(enemy)
   if enemy.boss and enemy.flags.ready then
-    love.graphics.setColor(enemy.flags.borderColor)
-    stg.mask('most', function() love.graphics.draw(images.border1, enemy.x, enemy.y, enemy.borderRotation, 1, 1, images.border1:getWidth() / 2, images.border1:getHeight() / 2) end)
+    love.graphics.setColor(stg.colors.black)
+    local base = 24
+    local mod = 16
+    stg.mask('most', function() love.graphics.circle('fill', enemy.x, enemy.y, base) end)
+    stg.mask('half', function() love.graphics.circle('fill', enemy.x, enemy.y, base + mod) end)
+    stg.mask('quarter', function() love.graphics.circle('fill', enemy.x, enemy.y, base + mod * 2) end)
     love.graphics.setColor(stg.colors.white)
   end
-  love.graphics.draw(images[enemy.type .. enemy.animateDir .. enemy.animateIndex], enemy.x, enemy.y, enemy.rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
+end
+
+local function drawEnemy(enemy)
+  -- if enemy.boss and enemy.flags.ready then
+  --   love.graphics.setColor(stg.colors.redDark)
+  --   stg.mask('most', function() love.graphics.circle('fill', enemy.x, enemy.y, 14) end)
+  --   love.graphics.setColor(stg.colors.purple)
+  --   stg.mask('half', function() love.graphics.circle('fill', enemy.x, enemy.y, 20) end)
+  -- end
+  love.graphics.setColor(stg.colors.white)
+  love.graphics.draw(images[enemy.type .. enemy.animateIndex], enemy.x, enemy.y, enemy.rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
 end
 
 local function drawBullets()
@@ -219,8 +216,9 @@ local function drawBullets()
 end
 
 local function draw()
-  for i = 1, #stage.enemies do if stage.enemies[i].active then drawEnemy(stage.enemies[i]) end end
+  for i = 1, #stage.enemies do if stage.enemies[i].active then drawShadow(stage.enemies[i]) end end
   drawBullets()
+  for i = 1, #stage.enemies do if stage.enemies[i].active then drawEnemy(stage.enemies[i]) end end
 end
 
 return {
@@ -233,8 +231,8 @@ return {
   spawnBullet = spawnBullet,
   killBullets = false,
   killBulletClock = 0,
-  moveBoss = moveBoss,
   bossHealth = 0,
   bossMaxHealth = 0,
-  setupMoveBoss = setupMoveBoss
+  placeEnemy = placeEnemy,
+  moveEnemy = moveEnemy
 }
