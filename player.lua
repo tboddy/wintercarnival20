@@ -161,16 +161,14 @@ local function drawPlayer()
       love.graphics.setColor(stg.colors.blueDark)
       stg.mask('quarter', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 1.5) end)
       stg.mask('half', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2) end)
-      -- love.graphics.setColor(stg.colors.blue)
+      love.graphics.setColor(stg.colors.blue)
       love.graphics.setLineWidth(1)
       love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2 + 6)
       love.graphics.setColor(stg.colors.white)
       love.graphics.draw(images.miyoi1, x + stg.frameOffset, y, 0, 1, 1, width / 2, height / 2)
       love.graphics.draw(images.hitbox, x + stg.frameOffset, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2)
     else
-      love.graphics.draw(images.miyoi1, x + stg.frameOffset + stg.grid * 7, y - 4, 0, -1, 1, images.miyoi1:getWidth() / 2, images.miyoi1:getHeight() / 2)
-      stg.mask('quarter', function() love.graphics.draw(images.hearts, x + stg.frameOffset, y, 0, 1, 1, images.hearts:getWidth() / 2, images.hearts:getHeight() / 2) end)
-      love.graphics.draw(images.suika1, x + stg.frameOffset, y + 4, 0, 1, 1, width / 2, height / 2)
+      love.graphics.draw(images.suika1, x + stg.frameOffset, y + 4, 0, 1, 1, images.suika1:getWidth() / 2, images.suika1:getHeight() / 2)
     end
   end
 end
