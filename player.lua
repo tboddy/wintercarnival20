@@ -1,24 +1,17 @@
 local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeight, bulletSpeed, bullets, hitboxSize, invulnerableLimit, clock, canShoot, shotClock, lives, invulnerableClock, borderCurrent
 
-local function loadImages()
-  images = {}
-  local imageFiles = {'idle1', 'idle2', 'hitbox', 'bullet-double', 'bullet-single', 'border'}
-  for i = 1, #imageFiles do images[imageFiles[i]] = love.graphics.newImage('img/player/' .. imageFiles[i] .. '.png') end
-  stg.loadImages(images)
-end
-
 local function load()
-  loadImages()
-  initX = stg.grid * 2.5
+  images = stg.images('player', {'suika1', 'miyoi1', 'hitbox', 'bullet-double', 'bullet-single', 'border', 'hearts'})
+  initX = stg.grid * 4
   initY = stg.height / 2
   x = initX
   y = initY
-  width = images.idle1:getWidth()
-  height = images.idle1:getHeight()
+  width = images.miyoi1:getWidth()
+  height = images.miyoi1:getHeight()
   bulletWidth = 28
   bulletHeight = 8
   bulletSpeed = 28
-  borderSize = 54
+  borderSize = 128
   bullets = {}
   for i = 1, 64 do bullets[i] = {} end
   hitboxSize = 8
@@ -32,7 +25,7 @@ local function load()
 end
 
 local function updateMove()
-  local speed = 2.75; if controls.focus() then speed = 1.5 end
+  local speed = 5.5; if controls.focus() then speed = 3 end
   local xSpeed = 0; if controls.left() then xSpeed = -1 elseif controls.right() then xSpeed = 1 end
   local ySpeed = 0; if controls.up() then ySpeed = -1 elseif controls.down() then ySpeed = 1 end
   local fSpeed = speed / math.sqrt(math.max(xSpeed + ySpeed, 1))
@@ -127,7 +120,7 @@ end
 
 local function updateBorderSize()
   if controls.focus() then
-    local mod = 4
+    local mod = 10
     if borderCurrent < borderSize / 2 - mod then borderCurrent = borderCurrent + mod
     elseif borderCurrent ~= borderSize / 2 then borderCurrent = borderSize / 2 end
   elseif borderCurrent ~= 0 then borderCurrent = 0 end
@@ -146,13 +139,13 @@ end
 local function drawBullet(bullet)
   local img = images['bullet-single']; if bullet.double then img = images['bullet-double'] end
   local size = bulletHeight; if bullet.double then size = size * 2 end
-  love.graphics.draw(img, bullet.x, bullet.y, bullet.angle, 1, 1, bulletWidth / 2, size / 2)
+  love.graphics.draw(img, bullet.x + stg.frameOffset, bullet.y, bullet.angle, 1, 1, bulletWidth / 2, size / 2)
 end
 
 local function animateImage(shadow)
   local interval = 30
-  local img = 'idle1'
-  if clock % interval >= interval / 2 then img = 'idle2' end
+  local img = 'miyoi1'
+  if clock % interval >= interval / 2 then img = 'miyoi1' end
   return images[img]
 end
 
@@ -162,18 +155,23 @@ local function drawPlayer()
   if invulnerableClock % interval < interval / 2 then canDraw = true end
   if canDraw then
     if controls.focus() then
-      local borderWidth = 6
-      love.graphics.setLineWidth(borderWidth)
-      love.graphics.setColor(stg.colors.brownDark)
-      stg.mask('quarter', function() love.graphics.circle('line', x - 1, y + 1, borderCurrent - borderWidth * 1.5) end)
-      stg.mask('half', function() love.graphics.circle('line', x - 1, y + 1, borderCurrent - borderWidth / 2) end)
-      love.graphics.setLineWidth(1)
-      love.graphics.circle('line', x - 1, y + 1, borderCurrent - borderWidth / 2 + 3)
-      love.graphics.setColor(stg.colors.white)
-    end
 
-    love.graphics.draw(animateImage(), x - 1, y + 1, 0, 1, 1, width / 2, height / 2)
-    if controls.focus() then love.graphics.draw(images.hitbox, x, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2) end
+      local borderWidth = 12
+      love.graphics.setLineWidth(borderWidth)
+      love.graphics.setColor(stg.colors.blueDark)
+      stg.mask('quarter', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 1.5) end)
+      stg.mask('half', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2) end)
+      -- love.graphics.setColor(stg.colors.blue)
+      love.graphics.setLineWidth(1)
+      love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2 + 6)
+      love.graphics.setColor(stg.colors.white)
+      love.graphics.draw(images.miyoi1, x + stg.frameOffset, y, 0, 1, 1, width / 2, height / 2)
+      love.graphics.draw(images.hitbox, x + stg.frameOffset, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2)
+    else
+      love.graphics.draw(images.miyoi1, x + stg.frameOffset + stg.grid * 7, y - 4, 0, -1, 1, images.miyoi1:getWidth() / 2, images.miyoi1:getHeight() / 2)
+      stg.mask('quarter', function() love.graphics.draw(images.hearts, x + stg.frameOffset, y, 0, 1, 1, images.hearts:getWidth() / 2, images.hearts:getHeight() / 2) end)
+      love.graphics.draw(images.suika1, x + stg.frameOffset, y + 4, 0, 1, 1, width / 2, height / 2)
+    end
   end
 end
 

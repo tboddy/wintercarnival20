@@ -32,6 +32,13 @@ local function loadImages(images)
 	for img, file in pairs(images) do images[img]:setFilter('nearest', 'nearest') end
 end
 
+local function images(dir, files)
+  local arr = {}
+  for i = 1, #files do arr[files[i]] = love.graphics.newImage('img/' .. dir .. '/' .. files[i] .. '.png') end
+  for img, file in pairs(arr) do arr[img]:setFilter('nearest', 'nearest') end
+  return arr
+end
+
 local function processScore(input)
   local score = tostring(input)
   -- if input == 0 then score = '0' end
@@ -83,9 +90,10 @@ local function doMask(mask, callback)
 end
 
 return {
-  scale = 3,
-  width = 320,
-  height = 240,
+  scale = 2,
+  width = 854,
+  height = 480,
+  gameWidth = 640,
   loaded = false,
   started = true,
   clock = 0,
@@ -104,5 +112,7 @@ return {
   font = love.graphics.newFont('fonts/Gold Box 8x8 Monospaced.ttf', 8),
   fontBig = love.graphics.newFont('fonts/Gold Box 8x16 Monospaced.ttf', 13),
   loadImages = loadImages,
-  timeLimit = 60 * 2
+  timeLimit = 60 * 2,
+  frameOffset = 107,
+  images = images
 }

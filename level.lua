@@ -9,7 +9,7 @@ function waveOne()
   local patterns = {
 
     function(enemy)
-      local function spawnBullets()
+      local function rings()
         local count = 30
         local angle = enemy.flags.bulletAngle
         explosion.spawn({x = enemy.flags.bulletPos.x, y = enemy.flags.bulletPos.y, shadow = true, type = 'red'})
@@ -18,19 +18,19 @@ function waveOne()
             bullet.x = enemy.flags.bulletPos.x
             bullet.y = enemy.flags.bulletPos.y
             bullet.angle = angle
-            bullet.speed = 4
+            bullet.speed = 8
             bullet.type = 'arrowRed'
           end, function(bullet)
             if bullet.flags.flipped then
-              bullet.speed = bullet.speed + .05
+              bullet.speed = bullet.speed + .1
             else
-              stg.slowEntity(bullet, 0, .125)
+              stg.slowEntity(bullet, 0, .25)
               if bullet.speed <= 0 then bullet.flags.flipped = true end
             end
           end)
           angle = angle + math.tau / count
         end
-        local speed = 12
+        local speed = 30
         enemy.flags.bulletPos.x = enemy.flags.bulletPos.x + math.cos(enemy.flags.bulletAngle) * speed
         enemy.flags.bulletPos.y = enemy.flags.bulletPos.y + math.sin(enemy.flags.bulletAngle) * speed
       end
@@ -41,28 +41,28 @@ function waveOne()
             bullet.y = enemy.y
             bullet.top = true
             bullet.angle = math.tau * math.random()
-            bullet.speed = 2.5 + math.random() * 2.5
+            bullet.speed = 4.5 + math.random() * 4
             if math.random() < .5 then bullet.type = 'big' else bullet.type = 'small' end
             bullet.flags.minSpeed = bullet.speed - 1
           end, function(bullet)
-            stg.slowEntity(bullet, bullet.flags.minSpeed, .05)
+            stg.slowEntity(bullet, bullet.flags.minSpeed, .1)
           end)
         end
       end
       local interval = 10
       local limit = interval * 5
       local max = limit * 3
-      local top = limit * 1.5
+      local top = limit * 1.5 + 20
       if enemy.clock % max == 0 then
         enemy.flags.bulletPos = {x = enemy.x, y = enemy.y}
+        enemy.flags.bulletAngle = math.pi
         enemy.flags.bulletAngle = stg.getAngle(enemy, player)
       end
-      if enemy.clock % interval == 0 and enemy.clock % max < limit then spawnBullets() end
+      if enemy.clock % interval == 0 and enemy.clock % max < limit then rings() end
       if enemy.clock % max == top then burst() end
-      if enemy.clock % max == top + interval * 2 then stage.placeEnemy(enemy) end
-      if enemy.clock % max >= top + interval * 2 then stage.moveEnemy(enemy) end
+      -- if enemy.clock % max == top + interval * 2 then stage.placeEnemy(enemy) end
+      -- if enemy.clock % max >= top + interval * 2 then stage.moveEnemy(enemy) end
     end,
-
 
     function(enemy)
       local function bulletsA()
@@ -624,10 +624,10 @@ function waveOne()
 
   local function spawnEnemy()
     stage.spawnEnemy(function(enemy)
-      enemy.type = 'mima'
-      enemy.x = stg.width + stage.images[enemy.type .. '1']:getWidth() / 2
+      enemy.type = 'sake'
+      enemy.x = stg.gameWidth + stage.images[enemy.type]:getWidth() / 2
       enemy.y = stg.height / 2
-      enemy.speed = 2.2
+      enemy.speed = 6
       enemy.angle = math.pi
       enemy.health = 25
       enemy.boss = true
@@ -635,7 +635,7 @@ function waveOne()
       enemy.flags.pattern = 1
       enemy.flags.borderColor = stg.colors.redLight
     end, function(enemy)
-      stg.slowEntity(enemy, 0, .05)
+      stg.slowEntity(enemy, 0, .1)
       if enemy.speed <= 0 then
         if not enemy.flags.ready then enemy.flags.ready = true end
         local pattern = 1
@@ -647,7 +647,7 @@ function waveOne()
           enemy.flags.pattern = pattern
           enemy.clock = -1
         end
-        patterns[pattern](enemy)
+        -- patterns[pattern](enemy)
         -- patterns[3](enemy)
       else enemy.clock = -1 end
     end)

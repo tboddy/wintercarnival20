@@ -1,16 +1,16 @@
 local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock, enemyAnimateInterval, enemyAnimateMax
 
 local function loadEnemies()
-  local types = {'fairyred', 'fairyblue', 'fairyyellow', 'fairygreen', 'yukari', 'mima'}
+  local types = {'beerlight', 'sake'}
   for i = 1, 32 do stage.enemies[i] = {} end
   for i = 1, #types do
-    for j = 1, 3 do
-      if types[i] == 'yukari' or types[i] == 'mima' then
-        images[types[i] .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/1.png')
-      else images[types[i] .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/' .. j .. '.png') end
-    end
+    images[types[i]] = love.graphics.newImage('img/enemies/' .. types[i] .. '.png')
+    -- for j = 1, 3 do
+      -- if types[i] == 'yukari' or types[i] == 'mima' then
+      --   images[types[i] .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/1.png')
+      -- else images[types[i] .. j] = love.graphics.newImage('img/enemies/' .. types[i] .. '/' .. j .. '.png') end
+    -- end
   end
-  images.border1 =  love.graphics.newImage('img/enemies/border1.png')
   stage.images = images
 end
 
@@ -56,10 +56,9 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.borderRotation = 0
   enemy.suicideFunc = false
 	initFunc(enemy)
-  enemy.xScale = 1
   enemy.maxHealth = enemy.health
-  enemy.width = images[enemy.type .. '1']:getWidth()
-  enemy.height = images[enemy.type .. '1']:getHeight()
+  enemy.width = images[enemy.type]:getWidth()
+  enemy.height = images[enemy.type]:getHeight()
 	enemy.updateFunc = updateFunc
 end
 
@@ -88,7 +87,6 @@ local function updateEnemy(enemy)
   	elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 2 then enemy.animateIndex = 1
     elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 2 and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 3 then enemy.animateIndex = 3
     elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 3 then enemy.animateIndex = 2 end
-    enemy.xScale = 1
     if enemy.x < -enemy.width / 2 or enemy.x > stg.width + enemy.width / 2 or enemy.y < -enemy.height / 2 or enemy.y > stg.height + enemy.height / 2 then enemy.active = false end
     enemy.clock = enemy.clock + 1
   elseif not enemy.seen and enemy.active then
@@ -131,14 +129,14 @@ local function spawnBullet(initFunc, updateFunc)
     bullet.flags = {}
     bullet.speed = 0
     bullet.angle = 0
-    if math.random() < .5 then bullet.xScale = 1 else bullet.xScale = -1 end
-    if math.random() < .5 then bullet.yScale = 1 else bullet.yScale = -1 end
 	  initFunc(bullet)
-    if string.find(bullet.type, 'arrow') then bullet.width = 16; bullet.height = 14; bullet.xScale = 1
-    elseif string.find(bullet.type, 'big') then bullet.width = 16; bullet.height = 16
-    elseif string.find(bullet.type, 'bolt') then bullet.width = 20; bullet.height = 6; bullet.xScale = 1
-    elseif string.find(bullet.type, 'pill') then bullet.width = 12; bullet.height = 4; bullet.xScale = 1
-    elseif string.find(bullet.type, 'small') then bullet.width = 8; bullet.height = 8 end
+    if string.find(bullet.type, 'arrow') then bullet.width = images.arrow0:getWidth(); bullet.height = images.arrow0:getHeight()
+    elseif string.find(bullet.type, 'big') then bullet.width = images.big0:getWidth(); bullet.height = images.big0:getHeight()
+    elseif string.find(bullet.type, 'bolt') then bullet.width = images.bolt0:getWidth(); bullet.height = images.bolt0:getHeight()
+    elseif string.find(bullet.type, 'pill') then bullet.width = images.pill0:getWidth(); bullet.height = images.pill0:getHeight()
+    elseif string.find(bullet.type, 'small') then bullet.width = images.small0:getWidth(); bullet.height = images.small0:getHeight() end
+    bullet.width = bullet.width * 2
+    bullet.height = bullet.height * 2
     if updateFunc then bullet.updateFunc = updateFunc else bullet.updateFunc = false end
 	end
 end
@@ -153,10 +151,10 @@ local function updateBullet(bullet)
   elseif bullet.clock % bulletAnimateMax >= bulletAnimateInterval * 3 then bullet.animateIndex = 3 end
 	if string.find(bullet.type, 'bolt') or string.find(bullet.type, 'arrow') or string.find(bullet.type, 'pill') then bullet.rotation = bullet.angle end
 	bullet.clock = bullet.clock + 1
-  -- if bullet.x < -bullet.width * 2
-  --   or bullet.x > stg.width + bullet.width * 2
-  --   or bullet.y < -bullet.height * 2
-  --   or bullet.y > stg.height + bullet.height * 2 then bullet.active = false
+  if bullet.x < -bullet.width * 2
+    or bullet.x > stg.width + bullet.width * 2
+    or bullet.y < -bullet.height * 2
+    or bullet.y > stg.height + bullet.height * 2 then bullet.active = false end
   local offset = stg.grid * 5
   if bullet.x < -offset
     or bullet.x > stg.width + offset
@@ -183,15 +181,10 @@ local function update()
 end
 
 local function drawShadow(enemy)
-  if enemy.boss and enemy.flags.ready then
-    love.graphics.setColor(stg.colors.black)
-    local base = 24
-    local mod = 16
-    stg.mask('most', function() love.graphics.circle('fill', enemy.x, enemy.y, base) end)
-    stg.mask('half', function() love.graphics.circle('fill', enemy.x, enemy.y, base + mod) end)
-    stg.mask('quarter', function() love.graphics.circle('fill', enemy.x, enemy.y, base + mod * 2) end)
-    love.graphics.setColor(stg.colors.white)
-  end
+  love.graphics.setColor(stg.colors.purple)
+  stg.mask('quarter', function() love.graphics.circle('fill', enemy.x + stg.frameOffset, enemy.y, 64) end)
+  stg.mask('half', function() love.graphics.circle('fill', enemy.x + stg.frameOffset, enemy.y, 42) end)
+  love.graphics.setColor(stg.colors.white)
 end
 
 local function drawEnemy(enemy)
@@ -199,16 +192,16 @@ local function drawEnemy(enemy)
   --   love.graphics.setColor(stg.colors.redDark)
   --   stg.mask('most', function() love.graphics.circle('fill', enemy.x, enemy.y, 14) end)
   --   love.graphics.setColor(stg.colors.purple)
-  --   stg.mask('half', function() love.graphics.circle('fill', enemy.x, enemy.y, 20) end)
   -- end
-  love.graphics.setColor(stg.colors.white)
-  love.graphics.draw(images[enemy.type .. enemy.animateIndex], enemy.x, enemy.y, enemy.rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
+  love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, enemy.rotation, 1, 1, enemy.width / 2, enemy.height / 2)
+  --  .. enemy.animateIndex
 end
 
 local function drawBullets()
 	local function drawBullet(bullet)
     if not bullet.flags.invisible then
-      love.graphics.draw(images[bullet.type .. bullet.animateIndex], bullet.x, bullet.y, bullet.rotation, bullet.xScale, bullet.yScale, bullet.width / 2, bullet.height / 2)
+      love.graphics.draw(images[bullet.type .. bullet.animateIndex], bullet.x + stg.frameOffset, bullet.y, bullet.rotation, 1, 1,
+        images[bullet.type .. bullet.animateIndex]:getWidth() / 2, images[bullet.type .. bullet.animateIndex]:getHeight() / 2)
     end
   end
 	for i = 1, #bullets do if bullets[i].active and not bullets[i].top then drawBullet(bullets[i]) end end

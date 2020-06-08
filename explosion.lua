@@ -58,15 +58,15 @@ local function drawExplosion(exp)
     if exp.type == 'red' then love.graphics.setColor(stg.colors.redLight)
     else love.graphics.setColor(stg.colors.blueLight) end
     stg.mask('quarter', function()
-      love.graphics.circle('fill', exp.x, exp.y, sSize / 4 * 3)
+      love.graphics.circle('fill', exp.x + stg.frameOffset, exp.y, sSize / 4 * 3)
     end)
     -- love.graphics.setColor(stg.colors.offWhite)
     stg.mask('half', function()
-      love.graphics.circle('fill', exp.x, exp.y, sSize / 2)
+      love.graphics.circle('fill', exp.x + stg.frameOffset, exp.y, sSize / 2)
     end)
     love.graphics.setColor(stg.colors.white)
   end
-  love.graphics.draw(images[exp.type][exp.current], exp.x, exp.y, 0, exp.xScale, exp.yScale, size / 2, size / 2)
+  love.graphics.draw(images[exp.type][exp.current], exp.x + stg.frameOffset, exp.y, 0, exp.xScale, exp.yScale, size / 2, size / 2)
 end
 
 local function draw()

@@ -4,7 +4,9 @@ local function load()
   images = {
     heart = love.graphics.newImage('img/chrome/heart.png'),
     heartShadow = love.graphics.newImage('img/chrome/heart-shadow.png'),
-    bossBar = love.graphics.newImage('img/chrome/bossbar.png')
+    bossBar = love.graphics.newImage('img/chrome/bossbar.png'),
+    frameLeft = love.graphics.newImage('img/chrome/frameleft.png'),
+    frameRight = love.graphics.newImage('img/chrome/frameright.png')
   }
 	stg.loadImages(images)
   evadeMax = 40
@@ -22,7 +24,7 @@ local function update()
 end
 
 local function drawLabel(opts)
-  opts.input = string.upper(opts.input)
+  -- opts.input = string.upper(opts.input)
   local color = stg.colors.offWhite
 	local align = 'left'
 	local limit = stg.width
@@ -33,13 +35,13 @@ local function drawLabel(opts)
     align = opts.align.type
     if opts.align.width then limit = opts.align.width end
   end
-  if opts.big then love.graphics.setFont(stg.fontBig) end
+  -- if opts.big then love.graphics.setFont(stg.fontBig) end
 	love.graphics.setColor(stg.colors.black)
   love.graphics.printf(opts.input, x + 1, opts.y + 1, limit, align)
 	love.graphics.setColor(color)
   love.graphics.printf(opts.input, x, opts.y, limit, align)
 	love.graphics.setColor(stg.colors.white)
-  if opts.big then love.graphics.setFont(stg.font) end
+  -- if opts.big then love.graphics.setFont(stg.font) end
 end
 
 local function drawBoss()
@@ -63,17 +65,19 @@ local function drawBoss()
   love.graphics.setColor(stg.colors.white)
 end
 
-local function drawPlayer()
-  local x = 4
-  local y = 4
-  -- drawLabel({input = 'Suika', align = {type = 'right', width = x + stg.grid * 4}, y = y})
-  drawLabel({input = 'sc ' .. stg.processScore(stg.score), x = x, y = y})
-  drawLabel({input = 'hi ' .. stg.processScore(stg.score), y = y, align = {type = 'right', width = stg.width - x}})
+local function drawScore()
+  drawLabel({input = 'Score ' .. stg.processScore(stg.score), x = stg.frameOffset + stg.grid / 4 * 3, y = stg.grid / 2})
+  drawLabel({input = 'High Score ' .. stg.processScore(stg.score), align = {type = 'right', width = stg.width - stg.frameOffset - stg.grid / 4 * 3}, y = stg.grid / 2})
+
+
+  -- local x = 4
+  -- local y = 4
+  -- drawLabel({input = 'hi ' .. stg.processScore(stg.score), y = y, align = {type = 'right', width = stg.width - x}})
   -- x = x + stg.grid * 4 + 4
-  y = y + 6
-  love.graphics.setFont(stg.fontBig)
-  drawLabel({input = 'x2', x = x, y = y})
-  love.graphics.setFont(stg.font)
+  -- y = y + 6
+  -- love.graphics.setFont(stg.fontBig)
+  -- drawLabel({input = 'x2', x = x, y = y})
+  -- love.graphics.setFont(stg.font)
 end
 
 local function drawBombs()
@@ -86,10 +90,33 @@ local function drawBombs()
   drawLabel({input = 'B', x = x, y = y, color = 'redLight'})
 end
 
+local function drawFrame()
+  local bgColor = stg.colors.black
+  local fgColor = stg.colors.purple
+  local width = images.frameLeft:getWidth()
+
+  love.graphics.setColor(bgColor)
+  love.graphics.rectangle('fill', 0, 0, width, stg.height)
+  love.graphics.rectangle('fill', stg.width - width, 0, width, stg.height)
+  love.graphics.setColor(fgColor)
+  love.graphics.draw(images.frameLeft, 0, 0)
+  love.graphics.draw(images.frameRight, stg.width - images.frameRight:getWidth(), 0)
+
+  love.graphics.rectangle('fill', width, 0, 1, stg.height)
+  love.graphics.rectangle('fill', stg.width - width, 0, 1, stg.height)
+  love.graphics.setColor(bgColor)
+  love.graphics.rectangle('fill', width - 1, 0, 1, stg.height)
+  love.graphics.rectangle('fill', stg.width - width + 1, 0, 1, stg.height)
+
+  love.graphics.setColor(stg.colors.white)
+end
+
 local function draw()
-  if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
-  drawPlayer()
-  drawBombs()
+  -- if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
+  -- love.graphics.setFont(stg.fontBig)
+  drawFrame()
+  drawScore()
+  -- drawBombs()
 end
 
 return {
