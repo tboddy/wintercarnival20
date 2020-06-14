@@ -1,20 +1,19 @@
-local images, sounds, initX, initY, x, y, width, height, bulletWidth, bulletHeight, bulletSpeed, bullets, hitboxSize, invulnerableLimit, clock, canShoot, shotClock, lives, invulnerableClock, borderCurrent
+local images, sounds, initX, initY, x, y, width, height, bullets, invulnerableLimit, clock, canShoot, laserWidth,
+  shotClock, lives, invulnerableClock, borderCurrent, laserSpeed, laserXMod, laserKill, laserClock, lastX, lastY, playerSpeed
 
 local function load()
-  images = stg.images('player', {'suika1', 'miyoi1', 'hitbox', 'bullet-double', 'bullet-single', 'border', 'hearts'})
+  images = stg.images('player', {'suika1', 'miyoi1', 'hitbox', 'bullet', 'bullet', 'border', 'hearts'})
   initX = stg.grid * 4
   initY = stg.height / 2
   x = initX
   y = initY
+  lastX = x
+  lastY = y
   width = images.miyoi1:getWidth()
   height = images.miyoi1:getHeight()
-  bulletWidth = 28
-  bulletHeight = 8
-  bulletSpeed = 28
-  borderSize = 128
+  borderSize = 164
   bullets = {}
   for i = 1, 64 do bullets[i] = {} end
-  hitboxSize = 8
   invulnerableLimit = 60 * 2.5
   clock = 0
   canShoot = true
@@ -22,19 +21,29 @@ local function load()
   lives = 2
   invulnerableClock = 0
   borderCurrent = 0
+  laserWidth = 32
+  laserXMod = 20
+  laserHeight = 12
+  laserSpeed = 64
+  laserKill = 0
+  laserClock = 0
 end
 
 local function updateMove()
-  local speed = 5.5; if controls.focus() then speed = 3 end
+  lastX = x
+  lastY = y
+  playerSpeed = 5.5; if controls.focus() then playerSpeed = 3 end
   local xSpeed = 0; if controls.left() then xSpeed = -1 elseif controls.right() then xSpeed = 1 end
   local ySpeed = 0; if controls.up() then ySpeed = -1 elseif controls.down() then ySpeed = 1 end
-  local fSpeed = speed / math.sqrt(math.max(xSpeed + ySpeed, 1))
+  local fSpeed = playerSpeed / math.sqrt(math.max(xSpeed + ySpeed, 1))
   x = x + fSpeed * xSpeed
   y = y + fSpeed * ySpeed
   player.x = x
   player.y = y
-  if x < hitboxSize / 2 then x = hitboxSize / 2 elseif x > stg.width - hitboxSize / 2 + 1 then x = stg.width - hitboxSize / 2 + 1 end
-  if y < hitboxSize / 2 then y = hitboxSize / 2 elseif y > stg.height - hitboxSize / 2 + 1 then y = stg.height - hitboxSize / 2 + 1 end
+  if x < images.hitbox:getWidth() / 2 then x = images.hitbox:getWidth() / 2
+  elseif x > stg.width - images.hitbox:getWidth() / 2 - stg.frameOffset * 2 then x = stg.width - images.hitbox:getWidth() / 2 - stg.frameOffset * 2 end
+  if y < images.hitbox:getHeight() / 2 then y = images.hitbox:getHeight() / 2
+  elseif y > stg.height - images.hitbox:getHeight() / 2 then y = stg.height - images.hitbox:getHeight() / 2 end
 end
 
 local function spawnBullet(opts)
@@ -42,33 +51,61 @@ local function spawnBullet(opts)
   local bullet = bullets[stg.getIndex(bullets)]
   local offset = 4
 	bullet.active = true
+  bullet.laser = false; if opts.laser then bullet.laser = true end
 	bullet.angle = diff * opts.mod
   if opts.double then bullet.double = true else bullet.double = false end
 	bullet.x = x + math.cos(bullet.angle) * offset
 	bullet.y = y + math.sin(bullet.angle) * offset
-  local size = bulletHeight / 2; if bullet.double then size = size * 2 end
-  local drunk = .025
-  bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
+  if opts.laser then
+    bullet.laserWidth = laserWidth
+    if x < lastX then
+      bullet.laserWidth = laserWidth + playerSpeed
+      if y < lastY or y > lastY then
+        -- bullet.laserWidth = bullet.laserWidth
+      end
+    end
+    if x > lastX then
+      bullet.laserWidth = laserWidth - playerSpeed
+      if y < lastY or y > lastY then
+        bullet.laserWidth = bullet.laserWidth + 2
+      end
+    end
+  else
+    local drunk = .025
+    bullet.angle = bullet.angle - drunk + drunk * 2 * math.random()
+  end
 end
 
 local function updateBullet(bullet)
+  local bulletWidth = images.bullet:getWidth()
+  local bulletHeight = images.bullet:getHeight()
+  local bulletSpeed = bulletWidth
+  if bullet.laser then
+    bulletHeight = laserHeight
+    bulletWidth = bullet.laserWidth
+    bulletSpeed = laserWidth
+  end
   local drunkMod = 8
+
 	bullet.x = bullet.x + math.cos(bullet.angle) * bulletSpeed
 	bullet.y = bullet.y + math.sin(bullet.angle) * bulletSpeed
-	if bullet.x < -bulletWidth * 2 or bullet.x > stg.width + bulletWidth * 2 or bullet.y < -bulletHeight * 2 or bullet.y > stg.height + bulletHeight * 2 then bullet.active = false
+
+	if bullet.x < -bulletWidth * 2 or bullet.x > stg.width - stg.frameOffset or
+    bullet.y < -bulletHeight * 2 or bullet.y > stg.height + bulletHeight * 2 then bullet.active = false
   else
     local kill = false
-    local size = bulletHeight / 2; if bullet.double then size = size * 2 end
     for i = 1, #stage.enemies do
       if stage.enemies[i].active and stage.enemies[i].seen then
-        if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + size then
+        if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + bulletHeight / 2 then
           stage.enemies[i].health = stage.enemies[i].health - 1
           kill = true
         end
       end
     end
     if kill then
-      explosion.spawn({x = bullet.x, y = bullet.y, type = 'gray'})
+      local explosionObj = {x = bullet.x, y = bullet.y, big = true}
+      if not bullet.laser then explosionObj.type = 'gray' end
+      explosion.spawn(explosionObj)
       bullet.active = false
     end
     if kill then bullet.active = false end
@@ -83,19 +120,22 @@ local function updateShot()
 	local interval = 10
 	local limit = interval * 2
 	local max = limit
-	if not canShoot and not stg.gameOver then
+	if not canShoot and not stg.gameOver and not controls.focus() then
 		if shotClock % interval == 0 and shotClock < limit then
       sound.sfx = 'playerbullet'
       spawnBullet({mod = 0})
-      if player.power >= 1 then
-        spawnBullet({mod = 1})
-        spawnBullet({mod = -1})
-      end
+      -- if player.power >= 1 then
+      --   spawnBullet({mod = 1})
+      --   spawnBullet({mod = -1})
+      -- end
     end
 		shotClock = shotClock + 1
+  elseif controls.focus() and controls.shot() then
+    spawnBullet({mod = 0, laser = true})
   end
 	if shotClock >= max then canShoot = true end
   for i = 1, #bullets do if bullets[i].active then updateBullet(bullets[i]) end end
+  -- updateLaser()
 end
 
 local function kill()
@@ -136,10 +176,41 @@ local function update()
   player.lives = lives
 end
 
+local function drawLaser(bullet)
+  local laserX = bullet.x - laserWidth + stg.frameOffset
+  local laserY = bullet.y - laserHeight / 2
+  local offset = 4
+  love.graphics.setColor(stg.colors.blueLight)
+  stg.mask('half', function() love.graphics.rectangle('fill', laserX + laserWidth, laserY - offset, bullet.laserWidth, laserHeight + offset * 2) end)
+  love.graphics.setColor(stg.colors.offWhite)
+  love.graphics.rectangle('fill', laserX + laserWidth, laserY, bullet.laserWidth, laserHeight)
+  love.graphics.setColor(stg.colors.white)
+end
+
+local function drawLaserBall()
+  local offset = stg.grid * 2 - 2
+  local rectWidth = 12
+  local yOffset = 4
+  local ballX = x + offset + stg.frameOffset
+  local rectY = y - laserHeight / 2
+  love.graphics.setColor(stg.colors.blueLight)
+  stg.mask('half', function()
+    love.graphics.rectangle('fill', ballX, rectY - yOffset, rectWidth, laserHeight + yOffset * 2)
+    love.graphics.circle('fill', ballX, y, laserHeight / 2 + yOffset)
+  end)
+  love.graphics.setColor(stg.colors.white)
+  love.graphics.rectangle('fill', ballX, rectY, rectWidth, laserHeight)
+  love.graphics.circle('fill', ballX, y, laserHeight / 2)
+  love.graphics.setColor(stg.colors.white)
+end
+
 local function drawBullet(bullet)
-  local img = images['bullet-single']; if bullet.double then img = images['bullet-double'] end
-  local size = bulletHeight; if bullet.double then size = size * 2 end
-  love.graphics.draw(img, bullet.x + stg.frameOffset, bullet.y, bullet.angle, 1, 1, bulletWidth / 2, size / 2)
+  if bullet.laser then drawLaser(bullet)
+  else
+    stg.mask('half', function()
+      love.graphics.draw(images.bullet, bullet.x + stg.frameOffset, bullet.y, bullet.angle, 1, 1, images.bullet:getWidth() / 2, images.bullet:getHeight() / 2)
+    end)
+  end
 end
 
 local function animateImage(shadow)
@@ -149,25 +220,29 @@ local function animateImage(shadow)
   return images[img]
 end
 
+local function drawBorder()
+  local borderWidth = 12
+  love.graphics.setLineWidth(borderWidth)
+  love.graphics.setColor(stg.colors.blueDark)
+  stg.mask('most', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2) end)
+  stg.mask('half', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 1.5 + 1) end)
+  stg.mask('quarter', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 2.5 + 2) end)
+  love.graphics.setLineWidth(2)
+  love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2 + borderWidth / 2)
+  love.graphics.setColor(stg.colors.white)
+end
+
 local function drawPlayer()
   local canDraw = false
   local interval = 30
   if invulnerableClock % interval < interval / 2 then canDraw = true end
   if canDraw then
     if controls.focus() then
-
-      local borderWidth = 12
-      love.graphics.setLineWidth(borderWidth)
-      love.graphics.setColor(stg.colors.blueDark)
-      stg.mask('quarter', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 1.5) end)
-      stg.mask('half', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2) end)
-      love.graphics.setColor(stg.colors.blue)
-      love.graphics.setLineWidth(1)
-      love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2 + 6)
-      love.graphics.setColor(stg.colors.white)
+      drawBorder()
       love.graphics.draw(images.miyoi1, x + stg.frameOffset, y, 0, 1, 1, width / 2, height / 2)
-      love.graphics.draw(images.hitbox, x + stg.frameOffset, y, 0, 1, 1, hitboxSize / 2, hitboxSize / 2)
+      love.graphics.draw(images.hitbox, x + stg.frameOffset, y, 0, 1, 1, images.hitbox:getWidth() / 2, images.hitbox:getHeight() / 2)
     else
+      -- love.graphics.draw(images.miyoi1, x + stg.frameOffset, y, 0, 1, 1, width / 2, height / 2)
       love.graphics.draw(images.suika1, x + stg.frameOffset, y + 4, 0, 1, 1, images.suika1:getWidth() / 2, images.suika1:getHeight() / 2)
     end
   end
@@ -175,7 +250,10 @@ end
 
 local function draw()
   drawPlayer()
-  stg.mask('half', function() for i = 1, #bullets do if bullets[i].active then drawBullet(bullets[i]) end end end)
+  for i = 1, #bullets do if bullets[i].active then
+    drawBullet(bullets[i])
+  end end
+  if controls.focus() and controls.shot() then drawLaserBall() end
 end
 
 return {

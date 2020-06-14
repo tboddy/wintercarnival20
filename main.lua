@@ -25,7 +25,7 @@ end
 
 function love.load()
 	math.randomseed(1419)
-  love.window.setTitle('ALCOHOLIC HUNCH')
+  love.window.setTitle('Alcoholic Infatuation')
 	container = love.graphics.newCanvas(stg.width, stg.height)
 	container:setFilter('nearest', 'nearest')
 	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})
@@ -59,6 +59,7 @@ function love.draw()
 	love.graphics.setCanvas({container, stencil = true})
   if stg.started then
     background.draw()
+    stage.drawBorders()
     player.draw()
     chips.draw()
     stage.draw()

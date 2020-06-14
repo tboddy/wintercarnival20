@@ -12,7 +12,7 @@ function waveOne()
       local function rings()
         local count = 30
         local angle = enemy.flags.bulletAngle
-        explosion.spawn({x = enemy.flags.bulletPos.x, y = enemy.flags.bulletPos.y, shadow = true, type = 'red'})
+        explosion.spawn({x = enemy.flags.bulletPos.x, y = enemy.flags.bulletPos.y, big = true, type = 'red'})
         for i = 0, count do
           stage.spawnBullet(function(bullet)
             bullet.x = enemy.flags.bulletPos.x
@@ -81,13 +81,13 @@ function waveOne()
             y = stg.height - y
             angle = enemy.flags.bulletAngleB
           end
-          explosion.spawn({x = enemy.x - stg.grid, y = y, shadow = true})
+          explosion.spawn({x = enemy.x - stg.grid, y = y, big = true})
           for i = 1, count do
             stage.spawnBullet(function(bullet)
               bullet.x = enemy.x - stg.grid
               bullet.y = y
               bullet.angle = angle
-              bullet.speed = 3.5
+              bullet.speed = 7
               bullet.type = 'arrow'
               bullet.top = true
             end)
@@ -115,13 +115,13 @@ function waveOne()
             y = stg.height - y
             angle = enemy.flags.bulletAngleD
           end
-          explosion.spawn({x = enemy.x, y = y, type = 'red', shadow = true})
+          explosion.spawn({x = enemy.x, y = y, type = 'red', big = true})
           for i = 1, count do
             stage.spawnBullet(function(bullet)
               bullet.x = enemy.x
               bullet.y = y
               bullet.angle = angle
-              bullet.speed = 4
+              bullet.speed = 8
               bullet.type = 'arrowRed'
             end)
             angle = angle + math.tau / count
@@ -138,21 +138,23 @@ function waveOne()
 
     function(enemy)
       local function spawnBullets()
-        local x = stg.width / 4 * 3 + (stg.width / 4 - stg.grid) * math.random()
+        -- local x = stg.width / 4 * 3 + (stg.width / 4 - stg.grid) * math.random()
+        local xMod = stg.grid * 6
+        local x = enemy.x - xMod + xMod * math.random()
         local y = (stg.height - stg.grid * 2) * math.random() + stg.grid
-        local count = 15
+        local count = 10
         local angle = math.tau * math.random()
-        explosion.spawn({x = x, y = y, shadow = true})
+        explosion.spawn({x = x, y = y, big = true})
         for i = 1, count do
           stage.spawnBullet(function(bullet)
             bullet.x = x
             bullet.y = y
             bullet.angle = angle
-            bullet.speed = 4.5
+            bullet.speed = 9
             bullet.top = true
             bullet.type = 'arrow'
           end, function(bullet)
-            stg.slowEntity(bullet, 3, .05)
+            stg.slowEntity(bullet, 6, .1)
           end)
           angle = angle + math.tau / count
         end
@@ -173,13 +175,13 @@ function waveOne()
             angle = angle - mod / 2
           end
           if opposite then y = stg.height - y end
-          explosion.spawn({x = enemy.x, y = y, type = 'red', shadow = 'true'})
+          explosion.spawn({x = enemy.x, y = y, type = 'red', big = 'true'})
           for i = 1, count do
             stage.spawnBullet(function(bullet)
               bullet.x = enemy.x
               bullet.y = y
               bullet.angle = angle
-              bullet.speed = 5
+              bullet.speed = 8
               bullet.top = true
               bullet.type = 'arrowRed'
             end)
@@ -195,16 +197,18 @@ function waveOne()
         end
       end
       local function spray()
-        stage.spawnBullet(function(bullet)
-          bullet.x = enemy.x
-          bullet.y = enemy.y
-          bullet.angle = math.tau * math.random()
-          bullet.speed = 3.5 + math.random() * 2
-          if math.random() < .5 then bullet.type = 'big' else bullet.type = 'small' end
-          bullet.flags.minSpeed = bullet.speed - 2
-        end, function(bullet)
-          stg.slowEntity(bullet, bullet.flags.minSpeed, .05)
-        end)
+        -- if enemy.clock % 2 == 0 then
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.angle = math.tau * math.random()
+            bullet.speed = 7 + math.random() * 4
+            if math.random() < .5 then bullet.type = 'big' else bullet.type = 'small' end
+            bullet.flags.minSpeed = bullet.speed - 4
+          end, function(bullet)
+            stg.slowEntity(bullet, bullet.flags.minSpeed, .1)
+          end)
+        -- end
       end
       sides()
       spray()
@@ -212,12 +216,13 @@ function waveOne()
 
   }
 
+
   local patterns2 = {
 
     function(enemy)
       local function lasers()
         local function spawnBullets(opposite)
-          local count = 25
+          local count = 20
           local angle = math.pi / 2
           if opposite then angle = angle + math.pi / count end
           local function spawnBullet()
@@ -225,8 +230,8 @@ function waveOne()
               bullet.x = enemy.x
               bullet.y = enemy.y
               bullet.angle = angle
-              bullet.speed = 5.25
-              bullet.type = 'bolt'
+              bullet.speed = 10
+              bullet.type = 'arrow'
             end)
             angle = angle + math.tau / count
           end
@@ -243,7 +248,7 @@ function waveOne()
               bullet.x = enemy.x
               bullet.y = enemy.y
               bullet.angle = math.tau * math.random()
-              bullet.speed = 2 + math.random() * 1.5
+              bullet.speed = 4 + math.random() * 3
               bullet.type = 'bigRed'; if math.random() < .5 then bullet.type = 'smallRed' end
               bullet.top = true
             end)
@@ -263,24 +268,27 @@ function waveOne()
         enemy.flags.ringAngleB = 0
       end
       local function spawnBullets(opposite) 
-        local count = 30
+        local count = 25
         local angle = enemy.flags.ringAngleA; if opposite then angle = enemy.flags.ringAngleB end
+        local angleLimit = math.pi / 5 * 2
         for i = 1, count do
-          stage.spawnBullet(function(bullet)
-            bullet.x = enemy.x
-            bullet.y = enemy.y
-            bullet.angle = angle
-            bullet.speed = 2.75
-            bullet.type = 'arrow'
-            if opposite then
-              bullet.type = 'arrowRed'
-              bullet.top = true
-            end
-          end)
+          if angle % math.tau >= angleLimit and angle % math.tau <= math.tau - angleLimit then
+            stage.spawnBullet(function(bullet)
+              bullet.x = enemy.x
+              bullet.y = enemy.y
+              bullet.angle = angle
+              bullet.speed = 7
+              bullet.type = 'arrow'
+              if opposite then
+                bullet.type = 'arrowRed'
+                bullet.top = true
+              end
+            end)
+          end
           angle = angle + math.tau / count
         end
       end
-      local interval = 8
+      local interval = 10
       if enemy.clock % interval == 0 then
         spawnBullets(enemy.clock % (interval * 3) == 0)
         local mod = math.pi / 60
@@ -292,21 +300,28 @@ function waveOne()
     function(enemy)
       local function spawnBullets(opposite)
         local y = stg.grid * 3.5
-        local count = 25
+        local count = 20
         local angle = enemy.flags.bulletAngle
+        local explosionObj = {x = enemy.x, y = y, big = true}
         if opposite then
           y = stg.height - y
           angle = -angle
+          explosionObj.type = 'red'
+          explosionObj.y = y
         end
-        explosion.spawn({x = enemy.x, y = y, shadow = true})
+        explosion.spawn(explosionObj)
+        local angleLimit = math.pi / 5 * 2
         for i = 1, count do
-          stage.spawnBullet(function(bullet)
-            bullet.x = enemy.x
-            bullet.y = y
-            bullet.angle = angle
-            bullet.speed = 4.5
-            bullet.type = 'bolt'
-          end)
+          if angle % math.tau >= angleLimit and angle % math.tau <= math.tau - angleLimit then
+            stage.spawnBullet(function(bullet)
+              bullet.x = enemy.x
+              bullet.y = y
+              bullet.angle = angle
+              bullet.speed = 7
+              bullet.type = 'arrow'
+              if opposite then bullet.type = 'arrowRed' end
+            end)
+          end
           angle = angle + math.tau / count
         end
       end
@@ -324,8 +339,8 @@ function waveOne()
     function(enemy)
       local function spawnBullets(opposite)
         local angle = enemy.flags.bulletAngle
-        local count = 25
-        local expObj = {x = enemy.flags.bulletPos.x, y = enemy.flags.bulletPos.y, shadow = true}
+        local count = 20
+        local expObj = {x = enemy.flags.bulletPos.x, y = enemy.flags.bulletPos.y, big = true}
         if opposite then expObj.type = 'red' end
         explosion.spawn(expObj)
         for i = 1, count do
@@ -333,17 +348,19 @@ function waveOne()
             bullet.x = enemy.flags.bulletPos.x
             bullet.y = enemy.flags.bulletPos.y
             bullet.angle = angle
-            bullet.speed = 3
+            bullet.speed = 4
             bullet.type = 'big'
             if opposite then
               bullet.flags.opposite = true
-              bullet.speed = 3.5
+              bullet.speed = 2
               bullet.type = 'bigRed'
               bullet.top = true
             end
           end, function(bullet)
-            bullet.speed = bullet.speed - .11
-            local mod = math.pi / (90 * 2.5)
+            if bullet.speed > -8 then
+              bullet.speed = bullet.speed - .1
+            end
+            local mod = math.pi / (360 + 90)
             if bullet.flags.opposite then
               mod = mod * -1
             end
@@ -351,7 +368,7 @@ function waveOne()
           end)
           angle = angle + math.tau / count
         end
-        local speed = 12
+        local speed = stg.grid * 1.5
         enemy.flags.bulletPos.x = enemy.flags.bulletPos.x + math.cos(enemy.flags.bulletTarget) * speed
         enemy.flags.bulletPos.y = enemy.flags.bulletPos.y + math.sin(enemy.flags.bulletTarget) * speed
       end
@@ -368,20 +385,29 @@ function waveOne()
     end,
 
     function(enemy)
+
+      local function randomAngle()
+        local angleLimit = math.pi / 4
+        local angle = math.tau * math.random()
+        if angle % math.tau >= angleLimit and angle % math.tau <= math.tau - angleLimit then
+          return angle
+        else return randomAngle() end
+      end
+
       local function spawnBullet(opposite)
-        stage.spawnBullet(function(bullet)
-          bullet.x = enemy.x
-          bullet.y = enemy.y
-          bullet.angle = math.tau * math.random()
-          bullet.speed = 4
-          bullet.top = true
-          if opposite then bullet.type = 'pill' else bullet.type = 'arrowRed' end
-        end, function(bullet)
-          stg.slowEntity(bullet, 3, .025)
-        end)
+          stage.spawnBullet(function(bullet)
+            bullet.x = enemy.x
+            bullet.y = enemy.y
+            bullet.angle = randomAngle()
+            bullet.speed = 10
+            bullet.top = true
+            if opposite then bullet.type = 'pill' else bullet.type = 'arrowRed' end
+          end, function(bullet)
+            stg.slowEntity(bullet, 7, .1)
+          end)
       end
       local limit = 60
-      local max = limit * 3
+      local max = limit * 2.5
       if enemy.clock % max < limit * 2 then
         for i = 1, 3 do spawnBullet(enemy.clock % max >= limit) end
       end
@@ -389,12 +415,19 @@ function waveOne()
 
     function(enemy)
       local function burst()
+        local function randomAngle()
+          local angleLimit = math.pi / 4
+          local angle = math.tau * math.random()
+          if angle % math.tau >= angleLimit and angle % math.tau <= math.tau - angleLimit then
+            return angle
+          else return randomAngle() end
+        end
         local function spawnBullet()
           stage.spawnBullet(function(bullet)
             bullet.x = enemy.x
             bullet.y = enemy.y
-            bullet.angle = math.tau * math.random()
-            bullet.speed = 3.25 + math.random() * .5
+            bullet.angle = randomAngle()
+            bullet.speed = 6 + math.random() * 2
             bullet.top = true
             bullet.type = 'bigRed'
           end)
@@ -403,18 +436,21 @@ function waveOne()
         spawnBullet()
       end
       local function ring()
+        local angleLimit = math.pi / 3
         local function spawnBullets()
           local angle = enemy.flags.bulletAngle
-          local count = 30
+          local count = 25
           for i = 1, count do
-            stage.spawnBullet(function(bullet)
-              bullet.x = enemy.x
-              bullet.y = enemy.y
-              bullet.angle = angle
-              bullet.speed = 4.3
-              bullet.top = true
-              bullet.type = 'arrow'
-            end)
+            if angle % math.tau >= angleLimit and angle % math.tau <= math.tau - angleLimit then
+              stage.spawnBullet(function(bullet)
+                bullet.x = enemy.x
+                bullet.y = enemy.y
+                bullet.angle = angle
+                bullet.speed = 7
+                bullet.top = true
+                bullet.type = 'arrow'
+              end)
+            end
             angle = angle + math.tau / count
           end
           enemy.flags.bulletAngle = enemy.flags.bulletAngle + math.pi / count + .01
@@ -436,46 +472,47 @@ function waveOne()
         local y = stg.grid * 3
         if opposite then y = stg.height - y end
         local angle = math.tau * math.random()
-        local count = 30
+        local count = 20
         for i = 1, count do
           stage.spawnBullet(function(bullet)
             bullet.x = x
             bullet.y = y
             bullet.angle = angle
-            bullet.speed = 3.5
+            bullet.speed = 6
             bullet.type = 'bigRed'
           end)
           angle = angle + math.tau / count
         end
-        explosion.spawn({x = x, y = y, shadow = true, type = 'red'})
+        explosion.spawn({x = x, y = y, big = true, type = 'red'})
       end
 
       local function spawnBulletsB()
         local x = enemy.x - stg.grid
         local y = (stg.height - stg.grid * 6) * math.random() + stg.grid * 3
         local angle = math.tau * math.random()
-        local count = 15
+        local count = 9
         for i = 1, count do
           stage.spawnBullet(function(bullet)
             bullet.x = x
             bullet.y = y
             bullet.angle = angle
-            bullet.speed = 5.25
+            bullet.speed = 10
             bullet.top = true
             bullet.type = 'arrow'
+            bullet.flags.pos = {x = x, y = y}
           end, function(bullet)
             if not bullet.flags.flipped then
-              stg.slowEntity(bullet, 0, .15)
+              stg.slowEntity(bullet, 0, .25)
               if bullet.speed <= 0 then
-                bullet.angle = stg.getAngle(enemy, player)
-                bullet.speed = 3
+                bullet.angle = stg.getAngle(bullet.flags.pos, player)
+                bullet.speed = 5
                 bullet.flags.flipped = true
               end
             end
           end)
           angle = angle + math.tau / count
         end
-        explosion.spawn({x = x, y = y, shadow = true})
+        explosion.spawn({x = x, y = y, big = true})
       end
 
       local interval = 16
@@ -495,7 +532,7 @@ function waveOne()
               bullet.x = enemy.x
               bullet.y = enemy.y
               bullet.angle = angle
-              bullet.speed = 3.5
+              bullet.speed = 7
               bullet.type = 'arrowRed'
             end)
             angle = angle + math.tau / count
@@ -514,7 +551,7 @@ function waveOne()
             bullet.x = enemy.x
             bullet.y = enemy.y
             bullet.angle = math.tau * math.random()
-            bullet.speed = 2 + math.random() * 1.5
+            bullet.speed = 4 + math.random() * 3
             bullet.type = 'big'; if math.random() < .5 then bullet.type = 'small' end
             bullet.top = true
           end)
@@ -538,10 +575,10 @@ function waveOne()
             bullet.x = enemy.x
             bullet.y = enemy.y
             bullet.angle = angle
-            bullet.speed = 7
+            bullet.speed = 10
             bullet.type = 'arrow'
           end, function(bullet)
-            stg.slowEntity(bullet, 4.5, .15)
+            stg.slowEntity(bullet, 7, .25)
           end)
           angle = angle + math.tau / count
         end
@@ -553,7 +590,7 @@ function waveOne()
         enemy.flags.bulletMod = 0
         enemy.flags.bulletModVar = math.pi / 150
       end
-      local interval = 5
+      local interval = 6
       if enemy.clock % interval == 0 then spawnBullets() end
     end,
 
@@ -564,7 +601,7 @@ function waveOne()
         local y = stg.height / 5
         y = y + y * offset
         local angle = stg.getAngle({x = enemy.x, y = y}, player)
-        explosion.spawn({x = enemy.x, y = y, shadow = true})
+        explosion.spawn({x = enemy.x, y = y, big = true})
 
         local function spawnBullet(faster, bigger)
           local bMod = mod
@@ -572,13 +609,13 @@ function waveOne()
           elseif bigger then bMod = 0 end
           local bAngle = angle - bMod / 2
           local cAngle = bAngle + bMod * math.random()
-          local cSpeed = 5 + math.random()
+          local cSpeed = 7 + math.random() * 2
           local circleAngle = math.pi * math.random()
           local function spawnBBullet(circleMod)
             local bX = enemy.x
             local bY = y
             if circleMod then
-              local cMod = 24
+              local cMod = 52
               bX = bX + math.cos(circleAngle) * cMod
               bY = bY + math.sin(circleAngle) * cMod
             end
@@ -590,13 +627,13 @@ function waveOne()
               bullet.type = 'arrow'
               if faster then bullet.speed = bullet.speed + 1
               elseif bigger then
-                bullet.speed = bullet.speed - .5
+                bullet.speed = bullet.speed - 1
                 bullet.top = true
                 bullet.type = 'small'
               end
               bullet.flags.speed = bullet.speed - 1
             end, function(bullet)
-              stg.slowEntity(bullet, bullet.flags.speed, .15)
+              stg.slowEntity(bullet, bullet.flags.speed, .25)
             end)
           end
           if bigger then
@@ -629,7 +666,7 @@ function waveOne()
       enemy.y = stg.height / 2
       enemy.speed = 6
       enemy.angle = math.pi
-      enemy.health = 25
+      enemy.health = 1000
       enemy.boss = true
       enemy.flags.initHealth = enemy.health
       enemy.flags.pattern = 1
@@ -639,16 +676,22 @@ function waveOne()
       if enemy.speed <= 0 then
         if not enemy.flags.ready then enemy.flags.ready = true end
         local pattern = 1
-        for i = 1, #patterns do
-          if enemy.health > enemy.flags.initHealth / #patterns * (i - 1) then pattern = i end
-        end
-        pattern = #patterns - pattern + 1
-        if enemy.flags.pattern ~= pattern then
-          enemy.flags.pattern = pattern
-          enemy.clock = -1
-        end
-        -- patterns[pattern](enemy)
-        -- patterns[3](enemy)
+        -- for i = 1, #patterns do
+        --   if enemy.health > enemy.flags.initHealth / #patterns * (i - 1) then pattern = i end
+        -- end
+        -- pattern = #patterns - pattern + 1
+        -- if enemy.flags.pattern ~= pattern then
+        --   enemy.flags.pattern = pattern
+        --   enemy.clock = -1
+        -- end
+        local interval = 60 * 5
+        local limit = 60
+        local max = interval * #patterns
+        if enemy.clock % max >= interval and enemy.clock % max < interval * 2 then pattern = 2
+        elseif enemy.clock % max >= interval * 2 and enemy.clock % max < interval * 3 then pattern = 3
+        elseif enemy.clock % max >= interval * 3 then pattern = 4 end
+        -- if enemy.clock % interval < interval - limit then patterns[pattern](enemy) end
+        patterns2[10](enemy)
       else enemy.clock = -1 end
     end)
   end

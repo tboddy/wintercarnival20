@@ -90,7 +90,7 @@ local function doMask(mask, callback)
 end
 
 return {
-  scale = 2,
+  scale = 1,
   width = 854,
   height = 480,
   gameWidth = 640,

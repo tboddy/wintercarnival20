@@ -1,8 +1,9 @@
-local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock, enemyAnimateInterval, enemyAnimateMax
+local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock, enemyAnimateInterval, enemyAnimateMax,
+  bossBorderCurrent
 
 local function loadEnemies()
-  local types = {'beerlight', 'sake'}
   for i = 1, 32 do stage.enemies[i] = {} end
+  local types = {'beerlight', 'sake', 'martini', 'bowl', 'kanpai'}
   for i = 1, #types do
     images[types[i]] = love.graphics.newImage('img/enemies/' .. types[i] .. '.png')
     -- for j = 1, 3 do
@@ -38,6 +39,7 @@ local function load()
   loadEnemies()
   loadBullets()
   stg.loadImages(images)
+  bossBorderCurrent = 0
 end
 
 local function spawnEnemy(initFunc, updateFunc)
@@ -180,19 +182,36 @@ local function update()
   stage.killBulletClock = killBulletClock
 end
 
-local function drawShadow(enemy)
-  love.graphics.setColor(stg.colors.purple)
-  stg.mask('quarter', function() love.graphics.circle('fill', enemy.x + stg.frameOffset, enemy.y, 64) end)
-  stg.mask('half', function() love.graphics.circle('fill', enemy.x + stg.frameOffset, enemy.y, 42) end)
+-- local function drawShadow(enemy)
+--   love.graphics.setColor(stg.colors.purple)
+--   stg.mask('quarter', function() love.graphics.circle('fill', enemy.x + stg.frameOffset, enemy.y, 64) end)
+--   stg.mask('half', function() love.graphics.circle('fill', enemy.x + stg.frameOffset, enemy.y, 42) end)
+--   love.graphics.setColor(stg.colors.white)
+-- end
+
+local function drawBossBorder(enemy)
+  local radius = stg.grid * 10
+  local width = stg.grid * 1.5 - 2
+  love.graphics.setColor(stg.colors.redDark)
+  love.graphics.setLineWidth(width)
+  stg.mask('most', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius - width / 2) end)
+  love.graphics.setLineWidth(width + 2)
+  stg.mask('half', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius - width * 1.5) end)
+  love.graphics.setLineWidth(width)
+  stg.mask('quarter', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius - width * 2.5) end)
+  love.graphics.setLineWidth(2)
+  love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius)
   love.graphics.setColor(stg.colors.white)
 end
 
+local function drawBorders()
+  for i = 1, #stage.enemies do if stage.enemies[i].active then
+    local enemy = stage.enemies[i]
+    if enemy.boss and enemy.flags.ready then drawBossBorder(enemy) end
+  end end
+end
+
 local function drawEnemy(enemy)
-  -- if enemy.boss and enemy.flags.ready then
-  --   love.graphics.setColor(stg.colors.redDark)
-  --   stg.mask('most', function() love.graphics.circle('fill', enemy.x, enemy.y, 14) end)
-  --   love.graphics.setColor(stg.colors.purple)
-  -- end
   love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, enemy.rotation, 1, 1, enemy.width / 2, enemy.height / 2)
   --  .. enemy.animateIndex
 end
@@ -209,14 +228,16 @@ local function drawBullets()
 end
 
 local function draw()
-  for i = 1, #stage.enemies do if stage.enemies[i].active then drawShadow(stage.enemies[i]) end end
+  -- for i = 1, #stage.enemies do if stage.enemies[i].active then drawShadow(stage.enemies[i]) end end
   drawBullets()
   for i = 1, #stage.enemies do if stage.enemies[i].active then drawEnemy(stage.enemies[i]) end end
+  -- love.graphics.draw(images.kanpai, stg.width - stg.frameOffset - images.kanpai:getWidth() - stg.grid, stg.grid * 2)
 end
 
 return {
   load = load,
   update = update,
+  drawBorders = drawBorders,
   draw = draw,
   enemies = {},
   enemyCount = 0,

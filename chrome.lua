@@ -102,12 +102,16 @@ local function drawFrame()
   love.graphics.draw(images.frameLeft, 0, 0)
   love.graphics.draw(images.frameRight, stg.width - images.frameRight:getWidth(), 0)
 
-  love.graphics.rectangle('fill', width, 0, 1, stg.height)
-  love.graphics.rectangle('fill', stg.width - width, 0, 1, stg.height)
   love.graphics.setColor(bgColor)
   love.graphics.rectangle('fill', width - 1, 0, 1, stg.height)
-  love.graphics.rectangle('fill', stg.width - width + 1, 0, 1, stg.height)
+  love.graphics.rectangle('fill', width - 3, 0, 1, stg.height)
+  love.graphics.rectangle('fill', stg.width - width, 0, 1, stg.height)
+  love.graphics.rectangle('fill', stg.width - width + 2, 0, 1, stg.height)
 
+  love.graphics.setColor(fgColor)
+  love.graphics.rectangle('fill', width - 2, 0, 1, stg.height)
+  love.graphics.rectangle('fill', stg.width - width + 1, 0, 1, stg.height)
+  
   love.graphics.setColor(stg.colors.white)
 end
 
