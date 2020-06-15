@@ -1,5 +1,5 @@
 local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets, killBulletClock, enemyAnimateInterval, enemyAnimateMax,
-  bossBorderCurrent
+  bossBorderCurrent, bossBorderSize
 
 local function loadEnemies()
   for i = 1, 32 do stage.enemies[i] = {} end
@@ -40,6 +40,7 @@ local function load()
   loadBullets()
   stg.loadImages(images)
   bossBorderCurrent = 0
+  bossBorderSize = stg.grid * 20
 end
 
 local function spawnEnemy(initFunc, updateFunc)
@@ -62,6 +63,9 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.width = images[enemy.type]:getWidth()
   enemy.height = images[enemy.type]:getHeight()
 	enemy.updateFunc = updateFunc
+  local staggerMod = math.pi / 45
+  enemy.stagger = -staggerMod + staggerMod * 2 * math.random()
+  enemy.xScale = 1; if math.random() < .5 then enemy.xScale = -1 end
 end
 
 local function updateEnemy(enemy)
@@ -95,7 +99,7 @@ local function updateEnemy(enemy)
     enemy.clock = -1
     enemy.x = enemy.x + math.cos(enemy.angle)
     enemy.y = enemy.y + math.sin(enemy.angle)
-    if enemy.x > -enemy.width / 2 and enemy.x < stg.width + enemy.width / 2 and enemy.y > -enemy.height / 2 and enemy.y < stg.height + enemy.height / 2 then enemy.seen = true end
+    if enemy.x > -enemy.width / 2 + stg.frameOffset and enemy.x < stg.width + enemy.width / 2 - stg.frameOffset and enemy.y > -enemy.height / 2 and enemy.y < stg.height + enemy.height / 2 then enemy.seen = true end
   end
   if enemy.boss and not enemy.active then
     stage.bossHealth = 0
@@ -170,9 +174,19 @@ local function updateBullet(bullet)
   end
 end
 
+local function updateBossBorder()
+  local mod = 10
+  if bossBorderCurrent < bossBorderSize / 2 - mod then bossBorderCurrent = bossBorderCurrent + mod
+  elseif bossBorderCurrent ~= bossBorderSize / 2 then bossBorderCurrent = bossBorderSize / 2 end
+end
+
 local function update()
   stage.enemyCount = 0
-  for i = 1, #stage.enemies do if stage.enemies[i].active then updateEnemy(stage.enemies[i]) end end
+  for i = 1, #stage.enemies do if stage.enemies[i].active then
+    local enemy = stage.enemies[i]
+    updateEnemy(enemy)
+    if enemy.boss and enemy.flags.ready then updateBossBorder(enemy) end
+  end end
   for i = 1, #bullets do if bullets[i].active then updateBullet(bullets[i]) end end
   if stage.killBullets then
     killBulletClock = killBulletLimit
@@ -190,17 +204,14 @@ end
 -- end
 
 local function drawBossBorder(enemy)
-  local radius = stg.grid * 10
-  local width = stg.grid * 1.5 - 2
+  local borderWidth = stg.grid * 1.5 - 2
+  love.graphics.setLineWidth(borderWidth)
   love.graphics.setColor(stg.colors.redDark)
-  love.graphics.setLineWidth(width)
-  stg.mask('most', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius - width / 2) end)
-  love.graphics.setLineWidth(width + 2)
-  stg.mask('half', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius - width * 1.5) end)
-  love.graphics.setLineWidth(width)
-  stg.mask('quarter', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius - width * 2.5) end)
+  stg.mask('most', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth / 2) end)
+  stg.mask('half', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth * 1.5 + 1) end)
+  stg.mask('quarter', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth * 2.5 + 2) end)
   love.graphics.setLineWidth(2)
-  love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, radius)
+  love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth / 2 + borderWidth / 2)
   love.graphics.setColor(stg.colors.white)
 end
 
@@ -212,7 +223,9 @@ local function drawBorders()
 end
 
 local function drawEnemy(enemy)
-  love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, enemy.rotation, 1, 1, enemy.width / 2, enemy.height / 2)
+  local rotation = 0
+  if enemy.stagger then rotation = enemy.stagger end
+  love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
   --  .. enemy.animateIndex
 end
 

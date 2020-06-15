@@ -1,14 +1,7 @@
 local images, evadeMax, evadeWidth, bossMax, bossHeight, bossY, bossX
 
 local function load()
-  images = {
-    heart = love.graphics.newImage('img/chrome/heart.png'),
-    heartShadow = love.graphics.newImage('img/chrome/heart-shadow.png'),
-    bossBar = love.graphics.newImage('img/chrome/bossbar.png'),
-    frameLeft = love.graphics.newImage('img/chrome/frameleft.png'),
-    frameRight = love.graphics.newImage('img/chrome/frameright.png')
-  }
-	stg.loadImages(images)
+  images = stg.images('chrome', {'bossbar', 'frameleft', 'frameright', 'suika', 'sweat'})
   evadeMax = 40
   evadeWidth = 12
   bossX = stg.width - 8 - 4
@@ -93,14 +86,14 @@ end
 local function drawFrame()
   local bgColor = stg.colors.black
   local fgColor = stg.colors.purple
-  local width = images.frameLeft:getWidth()
+  local width = images.frameleft:getWidth()
 
   love.graphics.setColor(bgColor)
   love.graphics.rectangle('fill', 0, 0, width, stg.height)
   love.graphics.rectangle('fill', stg.width - width, 0, width, stg.height)
   love.graphics.setColor(fgColor)
-  love.graphics.draw(images.frameLeft, 0, 0)
-  love.graphics.draw(images.frameRight, stg.width - images.frameRight:getWidth(), 0)
+  love.graphics.draw(images.frameleft, 0, 0)
+  love.graphics.draw(images.frameright, stg.width - images.frameright:getWidth(), 0)
 
   love.graphics.setColor(bgColor)
   love.graphics.rectangle('fill', width - 1, 0, 1, stg.height)
@@ -115,11 +108,37 @@ local function drawFrame()
   love.graphics.setColor(stg.colors.white)
 end
 
+local function drawDialog()
+  love.graphics.setColor(stg.colors.black)
+  local panelX = stg.grid * 8
+  local panelY = stg.grid * 19.5
+  local panelWidth = stg.grid * 36
+  local panelHeight = stg.grid * 8
+  stg.mask('most', function() love.graphics.rectangle('fill', panelX, panelY, panelWidth, panelHeight) end)
+  love.graphics.setColor(stg.colors.purple)
+  love.graphics.setLineWidth(3)
+  love.graphics.rectangle('line', panelX, panelY, panelWidth, panelHeight)
+  love.graphics.setLineWidth(1)
+  love.graphics.setColor(stg.colors.black)
+  love.graphics.rectangle('line', panelX, panelY, panelWidth, panelHeight)
+  love.graphics.setColor(stg.colors.white)
+  love.graphics.draw(images.suika, stg.grid, stg.height - images.suika:getHeight() - stg.grid)
+  -- love.graphics.draw(images.sweat, stg.grid * 9, stg.grid * 19.5)
+
+  local dialogX = panelX + stg.grid * 6
+  local dialogY = panelY + stg.grid * 2.25
+  chrome.drawLabel({input = chrome.dialogTitle, x = dialogX, y = dialogY})
+  dialogY = dialogY + stg.grid * 2 + 2
+  chrome.drawLabel({input = chrome.dialogText, x = dialogX, y = dialogY})
+
+end
+
 local function draw()
   -- if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
   -- love.graphics.setFont(stg.fontBig)
   drawFrame()
   drawScore()
+  if chrome.dialogActive then drawDialog() end
   -- drawBombs()
 end
 
@@ -127,6 +146,9 @@ return {
   load = load,
   draw = draw,
   drawLabel = drawLabel,
-  update = update
+  update = update,
+  dialogActive = false,
+  dialogTitle = 'Suika',
+  dialogText = '"Ahem... EVERYTHING goes good with sake..."'
 }
 

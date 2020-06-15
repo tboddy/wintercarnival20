@@ -47,13 +47,12 @@ local function updateMove()
 end
 
 local function spawnBullet(opts)
-	local diff = math.pi / 9
+	local diff = math.pi / 15
   local bullet = bullets[stg.getIndex(bullets)]
   local offset = 4
 	bullet.active = true
   bullet.laser = false; if opts.laser then bullet.laser = true end
 	bullet.angle = diff * opts.mod
-  if opts.double then bullet.double = true else bullet.double = false end
 	bullet.x = x + math.cos(bullet.angle) * offset
 	bullet.y = y + math.sin(bullet.angle) * offset
   if opts.laser then
@@ -86,10 +85,8 @@ local function updateBullet(bullet)
     bulletSpeed = laserWidth
   end
   local drunkMod = 8
-
 	bullet.x = bullet.x + math.cos(bullet.angle) * bulletSpeed
 	bullet.y = bullet.y + math.sin(bullet.angle) * bulletSpeed
-
 	if bullet.x < -bulletWidth * 2 or bullet.x > stg.width - stg.frameOffset or
     bullet.y < -bulletHeight * 2 or bullet.y > stg.height + bulletHeight * 2 then bullet.active = false
   else
@@ -97,7 +94,8 @@ local function updateBullet(bullet)
     for i = 1, #stage.enemies do
       if stage.enemies[i].active and stage.enemies[i].seen then
         if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + bulletHeight / 2 then
-          stage.enemies[i].health = stage.enemies[i].health - 1
+          local diff = 1; if bullet.laser then diff = .1 end
+          stage.enemies[i].health = stage.enemies[i].health - diff
           kill = true
         end
       end
@@ -125,8 +123,8 @@ local function updateShot()
       sound.sfx = 'playerbullet'
       spawnBullet({mod = 0})
       -- if player.power >= 1 then
-      --   spawnBullet({mod = 1})
-      --   spawnBullet({mod = -1})
+        spawnBullet({mod = 1})
+        spawnBullet({mod = -1})
       -- end
     end
 		shotClock = shotClock + 1
