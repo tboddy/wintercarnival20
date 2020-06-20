@@ -1,4 +1,5 @@
 math.tau = math.pi * 2
+math.phi = 1.618033988749895
 
 local function colors()
   local colorsTable = {
@@ -95,7 +96,7 @@ return {
   height = 480,
   gameWidth = 640,
   loaded = false,
-  started = false,
+  started = true,
   clock = 0,
   colors = colors(),
   processScore = processScore,

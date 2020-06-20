@@ -3,7 +3,7 @@ local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets,
 
 local function loadEnemies()
   for i = 1, 32 do stage.enemies[i] = {} end
-  local types = {'beerlight', 'sake', 'martini', 'bowl', 'kanpai'}
+  local types = {'beerlight', 'beerdark', 'sake', 'martini', 'bowl', 'kanpai', 'winered'}
   for i = 1, #types do
     images[types[i]] = love.graphics.newImage('img/enemies/' .. types[i] .. '.png')
     -- for j = 1, 3 do
@@ -49,6 +49,7 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.health = 1
   enemy.clock = 0
   enemy.flags = {}
+  enemy.big = false
   enemy.opposite = false
   enemy.speed = 0
   enemy.animateIndex = 1
@@ -225,7 +226,28 @@ end
 local function drawEnemy(enemy)
   local rotation = 0
   if enemy.stagger then rotation = enemy.stagger end
-  love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, rotation, enemy.xScale, 1, enemy.width / 2, enemy.height / 2)
+  local yScale = 1
+  local xScale = enemy.xScale
+  if enemy.big then
+    yScale = 2
+    xScale = xScale * 2
+  end
+  love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, rotation, xScale, yScale, enemy.width / 2, enemy.height / 2)
+  if enemy.type == 'bowl' then
+    -- print('lmao')
+    stg.mask('half', function()
+      local rad = 20 + math.cos(enemy.clock)
+      local function drawCirc(color)
+        love.graphics.setColor(stg.colors[color])
+        love.graphics.circle('fill', enemy.x + stg.frameOffset + 6, enemy.y - 54, rad)
+        rad = rad - 6
+      end
+      drawCirc('redLight')
+      drawCirc('yellow')
+      drawCirc('offWhite')
+      love.graphics.setColor(stg.colors.white)
+    end)
+  end
   --  .. enemy.animateIndex
 end
 

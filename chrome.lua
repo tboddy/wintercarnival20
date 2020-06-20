@@ -1,12 +1,12 @@
 local images, evadeMax, evadeWidth, bossMax, bossHeight, bossY, bossX
 
 local function load()
-  images = stg.images('chrome', {'bossbar', 'frameleft', 'frameright', 'suika', 'sweat'})
+  images = stg.images('chrome', {'bossbar', 'frameleft', 'frameright', 'suika', 'sweat', 'suika2'})
   evadeMax = 40
   evadeWidth = 12
-  bossX = stg.width - 8 - 4
-  bossY = stg.grid
-  bossMax = stg.height - stg.grid * 1.25
+  bossX = stg.width - stg.frameOffset - stg.grid * 1.75
+  bossY = stg.grid * 3.75
+  bossMax = stg.height - stg.grid * 4.5
   bossHeight = bossMax
 end
 
@@ -38,39 +38,19 @@ local function drawLabel(opts)
 end
 
 local function drawBoss()
-  local width = 8
+  local width = stg.grid
   local yMod = bossMax - bossHeight
   love.graphics.setColor(stg.colors.black)
   love.graphics.rectangle('fill', bossX + 1, bossY + yMod + 1, width, bossHeight)
   love.graphics.setColor(stg.colors.blueLight)
   love.graphics.rectangle('fill', bossX, bossY + yMod, width, bossHeight)
-  love.graphics.setColor(stg.colors.blue)
-  love.graphics.stencil(function()
-    love.graphics.setShader(stg.maskShader)
-    love.graphics.draw(images.bossBar, bossX, bossY)
-    return love.graphics.setShader()
-  end, 'replace', 1)
-  love.graphics.setStencilTest('greater', 0)
-  love.graphics.rectangle('fill', bossX, bossY + yMod, width, bossHeight)
-  love.graphics.setStencilTest()
-  love.graphics.setColor(stg.colors.blueLight)
-  stg.mask('half', function() love.graphics.rectangle('fill', bossX, bossY + yMod, width, 1) end)
   love.graphics.setColor(stg.colors.white)
+  drawLabel({input = 'a delicious scorpion bowl', y = stg.grid * 2, align = {type = 'right', width = bossX + width}})
 end
 
 local function drawScore()
   drawLabel({input = 'Score ' .. stg.processScore(stg.score), x = stg.frameOffset + stg.grid / 4 * 3, y = stg.grid / 2})
   drawLabel({input = 'High Score ' .. stg.processScore(stg.score), align = {type = 'right', width = stg.width - stg.frameOffset - stg.grid / 4 * 3}, y = stg.grid / 2})
-
-
-  -- local x = 4
-  -- local y = 4
-  -- drawLabel({input = 'hi ' .. stg.processScore(stg.score), y = y, align = {type = 'right', width = stg.width - x}})
-  -- x = x + stg.grid * 4 + 4
-  -- y = y + 6
-  -- love.graphics.setFont(stg.fontBig)
-  -- drawLabel({input = 'x2', x = x, y = y})
-  -- love.graphics.setFont(stg.font)
 end
 
 local function drawBombs()
@@ -114,6 +94,7 @@ local function drawDialog()
   local panelY = stg.grid * 19.5
   local panelWidth = stg.grid * 36
   local panelHeight = stg.grid * 8
+  local face = images.suika
   stg.mask('most', function() love.graphics.rectangle('fill', panelX, panelY, panelWidth, panelHeight) end)
   love.graphics.setColor(stg.colors.purple)
   love.graphics.setLineWidth(3)
@@ -122,22 +103,20 @@ local function drawDialog()
   love.graphics.setColor(stg.colors.black)
   love.graphics.rectangle('line', panelX, panelY, panelWidth, panelHeight)
   love.graphics.setColor(stg.colors.white)
-  love.graphics.draw(images.suika, stg.grid, stg.height - images.suika:getHeight() - stg.grid)
+  love.graphics.draw(face, stg.grid, stg.height - face:getHeight() - stg.grid)
   -- love.graphics.draw(images.sweat, stg.grid * 9, stg.grid * 19.5)
-
   local dialogX = panelX + stg.grid * 6
-  local dialogY = panelY + stg.grid * 2.25
+  local dialogY = panelY + stg.grid * 2 + 6
   chrome.drawLabel({input = chrome.dialogTitle, x = dialogX, y = dialogY})
-  dialogY = dialogY + stg.grid * 2 + 2
-  chrome.drawLabel({input = chrome.dialogText, x = dialogX, y = dialogY})
-
+  dialogY = dialogY + stg.grid * 2
+  chrome.drawLabel({input = '"' .. chrome.dialogText .. '"', x = dialogX, y = dialogY})
 end
 
 local function draw()
-  -- if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
   -- love.graphics.setFont(stg.fontBig)
   drawFrame()
   drawScore()
+  if stage.bossHealth > 0 and stage.bossMaxHealth > 0 then drawBoss() end
   if chrome.dialogActive then drawDialog() end
   -- drawBombs()
 end
@@ -149,6 +128,6 @@ return {
   update = update,
   dialogActive = false,
   dialogTitle = 'Suika',
-  dialogText = '"Ahem... EVERYTHING goes good with sake..."'
+  dialogText = 'An alcoholic obsession!'
 }
 

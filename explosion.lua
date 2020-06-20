@@ -5,7 +5,7 @@ local function load()
   types = {'blue', 'red', 'gray'}
   images = {}
   explosions = {}
-  for i = 1, 128 do explosions[i] = {} end
+  for i = 1, 256 do explosions[i] = {} end
   for i = 1, #types do
     images[types[i]] = {}
     for j = 0, 4 do images[types[i]][j] = love.graphics.newImage('img/explosion/' .. types[i] .. tostring(j) .. '.png') end

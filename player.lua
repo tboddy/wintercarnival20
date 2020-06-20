@@ -93,9 +93,11 @@ local function updateBullet(bullet)
     local kill = false
     for i = 1, #stage.enemies do
       if stage.enemies[i].active and stage.enemies[i].seen then
-        if math.sqrt((stage.enemies[i].x - bullet.x) * (stage.enemies[i].x - bullet.x) + (stage.enemies[i].y - bullet.y) * (stage.enemies[i].y - bullet.y)) < stage.enemies[i].height / 2 + bulletHeight / 2 then
-          local diff = 1; if bullet.laser then diff = .1 end
-          stage.enemies[i].health = stage.enemies[i].health - diff
+        local enemy = stage.enemies[i]
+        local size = enemy.height / 2; if enemy.big then size = size * 2 end
+        if math.sqrt((enemy.x - bullet.x) * (enemy.x - bullet.x) + (enemy.y - bullet.y) * (enemy.y - bullet.y)) < size + bulletHeight / 2 then
+          local diff = 1; if bullet.laser then diff = .2 end
+          enemy.health = enemy.health - diff
           kill = true
         end
       end
@@ -123,8 +125,8 @@ local function updateShot()
       sound.sfx = 'playerbullet'
       spawnBullet({mod = 0})
       -- if player.power >= 1 then
-        spawnBullet({mod = 1})
-        spawnBullet({mod = -1})
+        -- spawnBullet({mod = 1})
+        -- spawnBullet({mod = -1})
       -- end
     end
 		shotClock = shotClock + 1

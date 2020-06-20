@@ -5,7 +5,7 @@ local images, bottomStep, topStep, bottomCam, topCam, wallOffset, speed
 function load()
 	bottomStep = 0
 	topStep = 0
-	images = stg.images('background', {'floor', 'top', 'fade', 'wall', 'fadewall', 'fadetop'})
+	images = stg.images('background', {'floor', 'top', 'fade', 'wall', 'fadewall', 'fadetop', 'bug'})
 	local zoom = 480 / 2
 	bottomCam = pm.newCamera(stg.width, stg.height, 0, 0, 0, zoom, 1, 1)
 	wallOffset = 0
@@ -62,6 +62,7 @@ function draw()
 	love.graphics.setColor(stg.colors.black)
 	love.graphics.draw(images.fadetop, stg.frameOffset, 0)
 	love.graphics.setColor(stg.colors.white)
+	-- love.graphics.draw(images.bug, stg.width / 2 - images.bug:getWidth() / 2, stg.height / 2 - images.bug:getHeight() / 2)
 end
 
 return {

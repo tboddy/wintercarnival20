@@ -5,7 +5,7 @@ local function load()
   currentMenu = 1
   movingMenu = false
   menus = {
-    {items = {'S T A R T', 'C O N F I G', 'S C O R E', 'E X I T'}, current = 1},
+    {items = {'S T A R T', 'S E T U P', 'S C O R E', 'E X I T  '}, current = 1},
     {items = {'F U L L S C R E E N', 'B A C K'}, current = 1}
   }
   selecting = false
@@ -41,20 +41,16 @@ local function update()
 end
 
 local function drawTitle()
-  local offset = stg.grid * 3
   local letterOffset = stg.grid
   local function drawLogos(shadow)
     local y = stg.grid * 5.75
     if shadow then
       love.graphics.setColor(stg.colors.black)
       y = y + 1
-      offset = offset + 1
     else love.graphics.setColor(stg.colors.offWhite) end
-    -- love.graphics.draw(images.title, stg.width - offset - images.title:getWidth(), y)
-    -- y = y + images.title:getHeight() + letterOffset
-    love.graphics.draw(images.logo, stg.width - offset - images.logo:getWidth(), y)
+    love.graphics.draw(images.logo, stg.width / 2 - images.logo:getWidth() / 2, y)
     y = y + images.logo:getHeight() + letterOffset
-    love.graphics.draw(images.sublogo, stg.width - offset - images.sublogo:getWidth(), y)
+    love.graphics.draw(images.sublogo, stg.width / 2 - images.sublogo:getWidth() / 2, y)
     love.graphics.setColor(stg.colors.white)
   end
   drawLogos(true)
@@ -64,18 +60,18 @@ end
 local function drawCredits()
   local offset = stg.height - stg.grid * 2
   chrome.drawLabel({input = 'v0.01', y = offset, align = {type = 'right', width = stg.width - stg.grid}})
-  local credit = '2020 T.BODDY'
+  local credit = '2020 T.'
   chrome.drawLabel({input = credit, y = offset, x = stg.width / 2 - #credit * 8 / 2})
 end
 
 local function drawMenu()
-  local yOffset = stg.grid * 1.75
-  local y = stg.grid * 15
-  local arr = menus[currentMenu]
+  local yOffset = stg.grid * 1.5 + 2
+  local y = stg.grid * 15.5
 
   for i = 1, #menus[currentMenu].items do
-    local labelObj = {input = menus[currentMenu].items[i], align = {type = 'right', width = stg.width - stg.grid * 4}, y = y}
-    if i == menus[currentMenu].current then labelObj.color = 'blueLight' end
+    local x = stg.width / 2 - string.len(menus[currentMenu].items[i]) * 8 / 2
+    local labelObj = {input = menus[currentMenu].items[i], x = x, y = y}
+    if i == menus[currentMenu].current then labelObj.color = 'redLight' end
     chrome.drawLabel(labelObj)
     love.graphics.setColor(stg.colors.offWhite)
     y = y + yOffset
@@ -83,10 +79,10 @@ local function drawMenu()
 end
 
 local function draw()
-  -- love.graphics.draw(images.bg, 0, 0)
+  love.graphics.draw(images.bg, 0, 0)
   drawMenu()
-  -- drawTitle()
-  -- drawCredits()
+  drawTitle()
+  drawCredits()
   -- chrome.drawLabel({input = '2020 peace research', y = stg.height - 8 * 4, x = (stg.width - stg.width) / 2, align = {type = 'center'}})
 end
 
