@@ -96,7 +96,7 @@ return {
   height = 480,
   gameWidth = 640,
   loaded = false,
-  started = true,
+  started = false,
   clock = 0,
   colors = colors(),
   processScore = processScore,
