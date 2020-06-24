@@ -25,7 +25,7 @@ end
 
 function love.load()
 	math.randomseed(1419)
-  love.window.setTitle('Alcoholic Infatuation')
+  love.window.setTitle('alcohol time')
 	container = love.graphics.newCanvas(stg.width, stg.height)
 	container:setFilter('nearest', 'nearest')
 	love.window.setMode(stg.width * stg.scale, stg.height * stg.scale, {vsync = false})

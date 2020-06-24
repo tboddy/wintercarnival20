@@ -8,6 +8,7 @@ function load()
 	images = stg.images('background', {'floor', 'top', 'fade', 'wall', 'fadewall', 'fadetop', 'bug'})
 	local zoom = 480 / 2
 	bottomCam = pm.newCamera(stg.width, stg.height, 0, 0, 0, zoom, 1, 1)
+	topCam = pm.newCamera(stg.width, stg.height, 0, 0, 0, zoom, 1, 1)
 	wallOffset = 0
 	speed = 4
 end
@@ -32,9 +33,11 @@ function drawFloor()
 	love.graphics.rectangle('fill', 0, 0, stg.width, stg.height)
 	love.graphics.setColor(stg.colors.brownDark)
 	pm.drawPlane(bottomCam, images.floor, 0, bottomStep, 1, 1, true)
-	love.graphics.setColor(stg.colors.white)
+	love.graphics.setColor(stg.colors.purple)
+	stg.mask('quarter', function() pm.drawPlane(topCam, images.floor, 0, topStep, 1, 1, true) end)
 	love.graphics.setColor(stg.colors.black)
 	love.graphics.draw(images.fade, stg.frameOffset, images.floor:getHeight() * 2)
+	love.graphics.setColor(stg.colors.white)
 end
 
 function drawWall()
@@ -62,7 +65,7 @@ function draw()
 	love.graphics.setColor(stg.colors.black)
 	love.graphics.draw(images.fadetop, stg.frameOffset, 0)
 	love.graphics.setColor(stg.colors.white)
-	-- love.graphics.draw(images.bug, stg.width / 2 - images.bug:getWidth() / 2, stg.height / 2 - images.bug:getHeight() / 2)
+	-- love.graphics.draw(images.bug, stg.width / 2 - images.bug:getWidth() * (.25 + .125), stg.height / 2 - images.bug:getHeight() * (.25 + .125), 0, .75, .75)
 end
 
 return {

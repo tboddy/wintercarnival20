@@ -3,7 +3,7 @@ local killBulletLimit, bulletAnimateInterval, bulletAnimateMax, images, bullets,
 
 local function loadEnemies()
   for i = 1, 32 do stage.enemies[i] = {} end
-  local types = {'beerlight', 'beerdark', 'sake', 'martini', 'bowl', 'kanpai', 'winered'}
+  local types = {'beerlight', 'beerdark', 'sake', 'martini', 'bowl', 'kanpai', 'winered', 'miyoi', 'mamizou'}
   for i = 1, #types do
     images[types[i]] = love.graphics.newImage('img/enemies/' .. types[i] .. '.png')
     -- for j = 1, 3 do
@@ -40,7 +40,7 @@ local function load()
   loadBullets()
   stg.loadImages(images)
   bossBorderCurrent = 0
-  bossBorderSize = stg.grid * 20
+  bossBorderSize = stg.grid * 16
 end
 
 local function spawnEnemy(initFunc, updateFunc)
@@ -51,7 +51,9 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.flags = {}
   enemy.big = false
   enemy.opposite = false
+  enemy.offset = false
   enemy.speed = 0
+  enemy.speedS = 0
   enemy.animateIndex = 1
   enemy.seen = false
   enemy.score = 250
@@ -59,6 +61,7 @@ local function spawnEnemy(initFunc, updateFunc)
   enemy.boss = false
   enemy.borderRotation = 0
   enemy.suicideFunc = false
+  enemy.onScreen = false
 	initFunc(enemy)
   enemy.maxHealth = enemy.health
   enemy.width = images[enemy.type]:getWidth()
@@ -88,13 +91,22 @@ local function updateEnemy(enemy)
   if enemy.seen and enemy.active then
     enemy.x = enemy.x + math.cos(enemy.angle) * enemy.speed
     enemy.y = enemy.y + math.sin(enemy.angle) * enemy.speed
-    if enemy.updateFunc then enemy.updateFunc(enemy) end
+    if enemy.updateFunc and enemy.onScreen then enemy.updateFunc(enemy) end
     enemy.borderRotation = enemy.borderRotation + .0025
+    if enemy.speedS > 0 then
+      if enemy.clock >= enemy.offset and enemy.speed == 0 and not enemy.onScreen then
+        enemy.speed = enemy.speedS
+        enemy.onScreen = true
+        enemy.clock = -1
+      elseif enemy.clock < enemy.offset + 10 and not enemy.onScreen then
+        enemy.health = enemy.maxHealth
+      end
+    end
   	if enemy.clock % enemyAnimateMax < enemyAnimateInterval then enemy.animateIndex = 3
   	elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 2 then enemy.animateIndex = 1
     elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 2 and enemy.clock % enemyAnimateMax < enemyAnimateInterval * 3 then enemy.animateIndex = 3
     elseif enemy.clock % enemyAnimateMax >= enemyAnimateInterval * 3 then enemy.animateIndex = 2 end
-    if enemy.x < -enemy.width / 2 or enemy.x > stg.width + enemy.width / 2 or enemy.y < -enemy.height / 2 or enemy.y > stg.height + enemy.height / 2 then enemy.active = false end
+    if enemy.x < -enemy.width or enemy.x > stg.width + enemy.width / 2 or enemy.y < -enemy.height / 2 or enemy.y > stg.height + enemy.height / 2 then enemy.active = false end
     enemy.clock = enemy.clock + 1
   elseif not enemy.seen and enemy.active then
     enemy.clock = -1
@@ -109,21 +121,25 @@ local function updateEnemy(enemy)
 end
 
 local function placeEnemy(enemy)
-  local yOffset = stg.grid * 2.5
-  local xOffset = stg.grid * 1.5
-  local xLimit = stg.grid * 4
-  enemy.flags.moveX = (stg.width - xOffset - xLimit) + xLimit * math.random()
-  enemy.flags.moveY = yOffset + (stg.height - yOffset * 2) * math.random()
-  enemy.flags.moveTarget = {x = enemy.flags.moveX, y = enemy.flags.moveY}
+  local xOffset = stg.gameWidth / 4 * 3
+  local xWidth = stg.gameWidth / 4 - stg.grid * 4
+  local yOffset = stg.grid * 8
+  local yHeight = stg.height - yOffset * 2
+  enemy.flags.moveX = xWidth * math.random() + xOffset
+  enemy.flags.moveY = yHeight * math.random() + yOffset
+  enemy.flags.moveTarget = {x = math.floor(enemy.flags.moveX), y = math.floor(enemy.flags.moveY)}
+  enemy.flags.moveAngle = stg.getAngle(enemy, enemy.flags.moveTarget)
   local distance = stg.getDistance(enemy, enemy.flags.moveTarget)
-  if(distance < stg.grid * 5 or distance > stg.grid * 6) then placeEnemy(enemy)
+  if distance < stg.grid * 5 or distance > stg.grid * 8 then placeEnemy(enemy)
   else enemy.flags.moveAngle = stg.getAngle(enemy, enemy.flags.moveTarget) end
 end
 
 local function moveEnemy(enemy)
-  local speed = stg.getDistance(enemy, enemy.flags.moveTarget) / 20
-  enemy.x = enemy.x + math.cos(enemy.flags.moveAngle) * speed
-  enemy.y = enemy.y + math.sin(enemy.flags.moveAngle) * speed 
+  if enemy.flags.moveTarget and enemy.flags.moveAngle then
+    local speed = stg.getDistance(enemy, enemy.flags.moveTarget) / 20
+    enemy.x = enemy.x + math.cos(enemy.flags.moveAngle) * speed
+    enemy.y = enemy.y + math.sin(enemy.flags.moveAngle) * speed
+  end 
 end
 
 local function spawnBullet(initFunc, updateFunc)
@@ -176,7 +192,7 @@ local function updateBullet(bullet)
 end
 
 local function updateBossBorder()
-  local mod = 10
+  local mod = 15
   if bossBorderCurrent < bossBorderSize / 2 - mod then bossBorderCurrent = bossBorderCurrent + mod
   elseif bossBorderCurrent ~= bossBorderSize / 2 then bossBorderCurrent = bossBorderSize / 2 end
 end
@@ -207,7 +223,7 @@ end
 local function drawBossBorder(enemy)
   local borderWidth = stg.grid * 1.5 - 2
   love.graphics.setLineWidth(borderWidth)
-  love.graphics.setColor(stg.colors.redDark)
+  love.graphics.setColor(stg.colors.purple)
   stg.mask('most', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth / 2) end)
   stg.mask('half', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth * 1.5 + 1) end)
   stg.mask('quarter', function() love.graphics.circle('line', enemy.x + stg.frameOffset, enemy.y, bossBorderCurrent - borderWidth * 2.5 + 2) end)
@@ -229,8 +245,12 @@ local function drawEnemy(enemy)
   local yScale = 1
   local xScale = enemy.xScale
   if enemy.big then
-    yScale = 2
-    xScale = xScale * 2
+    yScale = 1.5
+    xScale = xScale * 1.5
+  end
+  if enemy.boss then
+    xScale = 1
+    yScale = 1
   end
   love.graphics.draw(images[enemy.type], enemy.x + stg.frameOffset, enemy.y, rotation, xScale, yScale, enemy.width / 2, enemy.height / 2)
   if enemy.type == 'bowl' then

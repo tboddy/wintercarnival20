@@ -42,10 +42,13 @@ local function drawBoss()
   local yMod = bossMax - bossHeight
   love.graphics.setColor(stg.colors.black)
   love.graphics.rectangle('fill', bossX + 1, bossY + yMod + 1, width, bossHeight)
-  love.graphics.setColor(stg.colors.blueLight)
+  love.graphics.setColor(stg.colors.yellowDark)
   love.graphics.rectangle('fill', bossX, bossY + yMod, width, bossHeight)
-  love.graphics.setColor(stg.colors.white)
-  drawLabel({input = 'a delicious scorpion bowl', y = stg.grid * 2, align = {type = 'right', width = bossX + width}})
+  love.graphics.setColor(stg.colors.yellow)
+  stg.mask('half', function() love.graphics.rectangle('fill', bossX, bossY + yMod, math.ceil(width / 3), bossHeight) end)
+  stg.mask('quarter', function() love.graphics.rectangle('fill', bossX + math.ceil(width / 3), bossY + yMod, math.ceil(width / 3), bossHeight) end)
+  love.graphics.rectangle('fill', bossX, bossY + yMod, 1, bossHeight)
+  drawLabel({input = 'Miyoi Okunoda', y = stg.grid * 2, align = {type = 'right', width = bossX + width}})
 end
 
 local function drawScore()

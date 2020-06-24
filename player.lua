@@ -9,8 +9,8 @@ local function load()
   y = initY
   lastX = x
   lastY = y
-  width = images.miyoi1:getWidth()
-  height = images.miyoi1:getHeight()
+  width = images.suika1:getWidth()
+  height = images.suika1:getHeight()
   borderSize = 164
   bullets = {}
   for i = 1, 64 do bullets[i] = {} end
@@ -87,14 +87,14 @@ local function updateBullet(bullet)
   local drunkMod = 8
 	bullet.x = bullet.x + math.cos(bullet.angle) * bulletSpeed
 	bullet.y = bullet.y + math.sin(bullet.angle) * bulletSpeed
-	if bullet.x < -bulletWidth * 2 or bullet.x > stg.width - stg.frameOffset or
+	if bullet.x < -bulletWidth * 2 or bullet.x > stg.width - stg.frameOffset * 2 + bulletWidth / 2 or
     bullet.y < -bulletHeight * 2 or bullet.y > stg.height + bulletHeight * 2 then bullet.active = false
   else
     local kill = false
     for i = 1, #stage.enemies do
-      if stage.enemies[i].active and stage.enemies[i].seen then
+      if stage.enemies[i].active and stage.enemies[i].onScreen then
         local enemy = stage.enemies[i]
-        local size = enemy.height / 2; if enemy.big then size = size * 2 end
+        local size = enemy.height / 2; if enemy.big then size = size * 1.5 end
         if math.sqrt((enemy.x - bullet.x) * (enemy.x - bullet.x) + (enemy.y - bullet.y) * (enemy.y - bullet.y)) < size + bulletHeight / 2 then
           local diff = 1; if bullet.laser then diff = .2 end
           enemy.health = enemy.health - diff
@@ -103,8 +103,8 @@ local function updateBullet(bullet)
       end
     end
     if kill then
-      local explosionObj = {x = bullet.x, y = bullet.y, big = true}
-      if not bullet.laser then explosionObj.type = 'gray' end
+      local explosionObj = {x = bullet.x, y = bullet.y, type = 'gray', big = true}
+      -- if not bullet.laser then explosionObj.type = 'gray' end
       explosion.spawn(explosionObj)
       bullet.active = false
     end
@@ -180,7 +180,7 @@ local function drawLaser(bullet)
   local laserX = bullet.x - laserWidth + stg.frameOffset
   local laserY = bullet.y - laserHeight / 2
   local offset = 4
-  love.graphics.setColor(stg.colors.blueLight)
+  love.graphics.setColor(stg.colors.yellow)
   stg.mask('half', function() love.graphics.rectangle('fill', laserX + laserWidth, laserY - offset, bullet.laserWidth, laserHeight + offset * 2) end)
   love.graphics.setColor(stg.colors.offWhite)
   love.graphics.rectangle('fill', laserX + laserWidth, laserY, bullet.laserWidth, laserHeight)
@@ -193,12 +193,12 @@ local function drawLaserBall()
   local yOffset = 4
   local ballX = x + offset + stg.frameOffset
   local rectY = y - laserHeight / 2
-  love.graphics.setColor(stg.colors.blueLight)
+  love.graphics.setColor(stg.colors.yellow)
   stg.mask('half', function()
     love.graphics.rectangle('fill', ballX, rectY - yOffset, rectWidth, laserHeight + yOffset * 2)
     love.graphics.circle('fill', ballX, y, laserHeight / 2 + yOffset)
   end)
-  love.graphics.setColor(stg.colors.white)
+  love.graphics.setColor(stg.colors.offWhite)
   love.graphics.rectangle('fill', ballX, rectY, rectWidth, laserHeight)
   love.graphics.circle('fill', ballX, y, laserHeight / 2)
   love.graphics.setColor(stg.colors.white)
@@ -206,24 +206,13 @@ end
 
 local function drawBullet(bullet)
   if bullet.laser then drawLaser(bullet)
-  else
-    stg.mask('half', function()
-      love.graphics.draw(images.bullet, bullet.x + stg.frameOffset, bullet.y, bullet.angle, 1, 1, images.bullet:getWidth() / 2, images.bullet:getHeight() / 2)
-    end)
-  end
-end
-
-local function animateImage(shadow)
-  local interval = 30
-  local img = 'miyoi1'
-  if clock % interval >= interval / 2 then img = 'miyoi1' end
-  return images[img]
+  else stg.mask('half', function() love.graphics.draw(images.bullet, bullet.x + stg.frameOffset, bullet.y, bullet.angle, 1, 1, images.bullet:getWidth() / 2, images.bullet:getHeight() / 2) end) end
 end
 
 local function drawBorder()
   local borderWidth = 12
   love.graphics.setLineWidth(borderWidth)
-  love.graphics.setColor(stg.colors.blueDark)
+  love.graphics.setColor(stg.colors.brownDark)
   stg.mask('most', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth / 2) end)
   stg.mask('half', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 1.5 + 1) end)
   stg.mask('quarter', function() love.graphics.circle('line', x + stg.frameOffset, y, borderCurrent - borderWidth * 2.5 + 2) end)
@@ -237,13 +226,10 @@ local function drawPlayer()
   local interval = 30
   if invulnerableClock % interval < interval / 2 then canDraw = true end
   if canDraw then
+    love.graphics.draw(images.suika1, x + stg.frameOffset, y + 4, 0, 1, 1, images.suika1:getWidth() / 2, images.suika1:getHeight() / 2)
     if controls.focus() then
       drawBorder()
-      love.graphics.draw(images.miyoi1, x + stg.frameOffset, y, 0, 1, 1, width / 2, height / 2)
       love.graphics.draw(images.hitbox, x + stg.frameOffset, y, 0, 1, 1, images.hitbox:getWidth() / 2, images.hitbox:getHeight() / 2)
-    else
-      -- love.graphics.draw(images.miyoi1, x + stg.frameOffset, y, 0, 1, 1, width / 2, height / 2)
-      love.graphics.draw(images.suika1, x + stg.frameOffset, y + 4, 0, 1, 1, images.suika1:getWidth() / 2, images.suika1:getHeight() / 2)
     end
   end
 end
